@@ -2,7 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
-const db = require("../db");
+const db = require("../config/db");
+
 const SECRET_KEY = "your_secret_key";
 
 // Employee Registration

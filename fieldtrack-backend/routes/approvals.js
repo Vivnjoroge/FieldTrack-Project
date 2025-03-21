@@ -1,3 +1,8 @@
+const express = require("express");
+const router = express.Router();
+const db = require("../config/db");
+const verifyToken = require("../middleware/auth");
+
 router.post("/approve", verifyToken, (req, res) => {
     const { approval_id, status } = req.body;
 
@@ -7,3 +12,4 @@ router.post("/approve", verifyToken, (req, res) => {
         res.json({ message: "Approval status updated" });
     });
 });
+module.exports = router;
