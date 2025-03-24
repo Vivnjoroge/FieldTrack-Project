@@ -4,12 +4,8 @@ const db = require("../config/db");
 
 // GET all employees
 router.get("/", (req, res) => {
-    db.query("SELECT * FROM Employee", (err, results) => {
-        if (err) {
-            console.error("Database error:", err); // Log the error to the console
-            return res.status(500).json({ error: err.message });
-        }
-        console.log("Results:", results); // Log the results
+    db.query("SELECT Employee_ID, Name, Department, Email FROM Employee", (err, results) => {
+        if (err) return res.status(500).json({ message: "Error fetching employees" });
         res.json(results);
     });
 });

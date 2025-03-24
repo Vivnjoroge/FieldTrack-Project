@@ -4,25 +4,28 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 const db = require("../config/db");
 
-const SECRET_KEY = "your_secret_key";
+const SECRET_KEY = "your_secret_key"; // Replace with process.env.SECRET_KEY
 
 // Employee Registration
 router.post("/register", async (req, res) => {
-    const { name, department, contact_info, password } = req.body;
+    const { name, department, email, password } = req.body; // Change contact_info to email
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    db.query("INSERT INTO Employee (Name, Department, Contact_Info, Password) VALUES (?, ?, ?, ?)", 
-    [name, department, contact_info, hashedPassword], (err, result) => {
-        if (err) return res.status(500).json({ message: "Error registering user" });
-        res.json({ message: "User registered successfully" });
-    });
+    db.query(
+        "INSERT INTO Employee (Name, Department, Email, Password) VALUES (?, ?, ?, ?)", 
+        [name, department, email, hashedPassword], 
+        (err, result) => {
+            if (err) return res.status(500).json({ message: "Error registering user", error: err });
+            res.json({ message: "User registered successfully" });
+        }
+    );
 });
 
 // Employee Login
 router.post("/login", (req, res) => {
-    const { contact_info, password } = req.body;
+    const { email, password } = req.body;
 
-    db.query("SELECT * FROM Employee WHERE Contact_Info = ?", [contact_info], async (err, results) => {
+    db.query("SELECT * FROM Employee WHERE Email = ?", [email], async (err, results) => {
         if (err || results.length === 0) return res.status(401).json({ message: "Invalid credentials" });
 
         const user = results[0];
