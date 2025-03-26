@@ -19,6 +19,10 @@ const handleAuth = async () => {
     message.value = "";
     error.value = "";
 
+    // Log the input values before submission
+    console.log("Email:", contact_info.value);
+    console.log("Password:", password.value);
+
     try {
         let response;
         if (isLogin.value) {
