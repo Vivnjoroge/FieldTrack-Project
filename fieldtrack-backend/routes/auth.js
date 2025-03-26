@@ -24,15 +24,32 @@ router.post("/register", async (req, res) => {
 // Employee Login
 router.post("/login", (req, res) => {
     const { email, password } = req.body;
+    console.log("📩 Login attempt for email:", email);
 
     db.query("SELECT * FROM Employee WHERE Email = ?", [email], async (err, results) => {
-        if (err || results.length === 0) return res.status(401).json({ message: "Invalid credentials" });
+        if (err) {
+            console.error("❌ Database error:", err);
+            return res.status(500).json({ message: "Server error" });
+        }
+
+        if (results.length === 0) {
+            console.warn("⚠️ No user found with email:", email);
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
 
         const user = results[0];
+        console.log("🔍 Found user:", user);
+
         const isMatch = await bcrypt.compare(password, user.Password);
-        if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+        console.log("🔑 Password match:", isMatch);
+
+        if (!isMatch) {
+            console.warn("⚠️ Incorrect password for:", email);
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
 
         const token = jwt.sign({ id: user.Employee_ID }, SECRET_KEY, { expiresIn: "1h" });
+        console.log("✅ Login successful! Token generated.");
         res.json({ token });
     });
 });

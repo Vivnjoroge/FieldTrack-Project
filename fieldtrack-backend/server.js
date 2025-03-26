@@ -24,6 +24,7 @@ app.get("/", (req, res) => {
 
 // Use Routes
 app.use("/api/auth", auth);
+console.log("✅ auth.js loaded"); 
 app.use("/api/employees", employees);
 app.use("/api/expenses", expenses);
 app.use("/api/resources", resources);
