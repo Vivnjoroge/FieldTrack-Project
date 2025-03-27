@@ -10,7 +10,7 @@ const router = useRouter();
 const isLogin = ref(true); // Toggle between login and register
 const name = ref(""); // Only used for Register
 const department = ref(""); // Required for Register
-const contact_info = ref(""); // Email/phone number
+const email = ref(""); // Email/phone number
 const password = ref("");
 const message = ref("");
 const error = ref("");
@@ -20,7 +20,7 @@ const handleAuth = async () => {
     error.value = "";
 
     // Log the input values before submission
-    console.log("Email:", contact_info.value);
+    console.log("Email:", email.value);
     console.log("Password:", password.value);
 
     try {
@@ -28,7 +28,7 @@ const handleAuth = async () => {
         if (isLogin.value) {
             // Login
             response = await authStore.login({
-                contact_info: contact_info.value,
+                email: email.value,
                 password: password.value
             });
             if (response.success) {
@@ -42,7 +42,7 @@ const handleAuth = async () => {
             response = await authStore.register({
                 name: name.value,
                 department: department.value,
-                contact_info: contact_info.value,
+                email: email.value,
                 password: password.value
             });
             if (response.success) {
@@ -91,7 +91,7 @@ const handleAuth = async () => {
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" />
                         </div>
 
-                        <input v-model="contact_info" type="email" placeholder="Email"
+                        <input v-model="email" type="email" placeholder="Email"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" />
 
                         <input v-model="password" type="password" placeholder="Password"
