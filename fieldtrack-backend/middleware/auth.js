@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const SECRET_KEY = "your_secret_key"; // Make sure to use the same secret key from server.js
+const SECRET_KEY = "278683f7fda2b507544fc5a074d2209fc99764e119ee5cd461b53d1806bab30b64e535b1eb0109ba424c9d2aa1d2519a0abc3623850187848303bfc830a51a6f"; // Make sure to use the same secret key from server.js
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {

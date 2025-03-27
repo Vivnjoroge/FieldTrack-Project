@@ -7,7 +7,7 @@ require("dotenv").config(); // Load environment variables
 const router = express.Router();
 const SECRET_KEY = process.env.SECRET_KEY; // Ensure this is set in your .env file
 
-// 🚀 Employee Registration
+// 🚀 Employee Registration (Supports Finance & Manager roles)
 router.post("/register", async (req, res) => {
     const { name, department, email, password } = req.body;
 
@@ -15,73 +15,71 @@ router.post("/register", async (req, res) => {
         return res.status(400).json({ message: "All fields are required!" });
     }
 
-    // 🔍 Check if user already exists
+    // Assign role based on department
+    let role = "Employee"; // Default role
+    if (department.toLowerCase() === "finance") {
+        role = "Finance";
+    } else if (department.toLowerCase() === "management") {
+        role = "Manager";
+    }
+
     db.query("SELECT * FROM Employee WHERE Email = ?", [email], async (err, results) => {
-        if (err) {
-            console.error("❌ Database error:", err);
-            return res.status(500).json({ message: "Server error" });
-        }
+        if (err) return res.status(500).json({ message: "Server error" });
 
-        if (results.length > 0) {
-            return res.status(400).json({ message: "⚠️ User already exists!" });
-        }
+        if (results.length > 0) return res.status(400).json({ message: "User already exists!" });
 
-        // ✅ Hash password before storing
-        const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         db.query(
-            "INSERT INTO Employee (Name, Department, Email, Password) VALUES (?, ?, ?, ?)", 
-            [name, department, email, hashedPassword], 
+            "INSERT INTO Employee (Name, Department, Email, Password, Role) VALUES (?, ?, ?, ?, ?)",
+            [name, department, email, hashedPassword, role],
             (err, result) => {
-                if (err) {
-                    console.error("❌ Registration error:", err);
-                    return res.status(500).json({ message: "Error registering user" });
-                }
-                res.json({ message: "✅ User registered successfully!" });
+                if (err) return res.status(500).json({ message: "Error registering user" });
+
+                res.json({ success: true, message: "User registered successfully!", role });
             }
         );
     });
 });
 
-// 🚀 Employee Login
+// 🚀 Employee Login (With JWT Token)
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
-    console.log("📩 Received request body:", req.body);
 
     if (!email || !password) {
-        console.warn("⚠️ Missing email or password!");
-        return res.status(400).json({ message: "Email and password are required" });
+        return res.status(400).json({ message: "Email and password are required!" });
     }
 
     db.query("SELECT * FROM Employee WHERE Email = ?", [email], async (err, results) => {
-        if (err) {
-            console.error("❌ Database error:", err);
-            return res.status(500).json({ message: "Server error" });
-        }
+        if (err) return res.status(500).json({ message: "Server error" });
 
-        if (results.length === 0) {
-            console.warn("⚠️ No user found with email:", email);
-            return res.status(401).json({ message: "Invalid credentials" });
-        }
+        if (results.length === 0) return res.status(401).json({ message: "Invalid email or password!" });
 
         const user = results[0];
-        console.log("🔍 Found user:", user);
 
-        // ✅ Compare passwords
-        const isMatch = await bcrypt.compare(password, user.Password);
-        console.log("🔑 Password match:", isMatch);
+        const match = await bcrypt.compare(password, user.Password);
+        if (!match) return res.status(401).json({ message: "Invalid email or password!" });
 
-        if (!isMatch) {
-            console.warn("⚠️ Incorrect password for:", email);
-            return res.status(401).json({ message: "Invalid credentials" });
-        }
+        // Generate JWT Token
+        const token = jwt.sign(
+            { id: user.ID, role: user.Role, department: user.Department }, // Payload
+            SECRET_KEY,
+            { expiresIn: "1h" } // Token expires in 1 hour
+        );
 
-        // ✅ Generate JWT token
-        const token = jwt.sign({ id: user.Employee_ID }, SECRET_KEY, { expiresIn: "1h" });
-        console.log("✅ Login successful! Token generated.");
-        res.json({ token });
+        res.json({
+            success: true,
+            message: "Login successful!",
+            token, // Send token to frontend
+            role: user.Role,
+            department: user.Department
+        });
     });
 });
 
-module.exports = router;
+// 🚀 Logout (Optional: Clear Token on Frontend)
+router.post("/logout", (req, res) => {
+    res.json({ success: true, message: "Logged out successfully!" });
+});
 
+module.exports = router;

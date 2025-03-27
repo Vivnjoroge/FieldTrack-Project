@@ -10,18 +10,23 @@ const router = useRouter();
 const isLogin = ref(true); // Toggle between login and register
 const name = ref(""); // Only used for Register
 const department = ref(""); // Required for Register
-const email = ref(""); // Email/phone number
-const password = ref("");
-const message = ref("");
-const error = ref("");
+const email = ref(""); // Email input
+const password = ref(""); // Password input
+const message = ref(""); // Success message
+const error = ref(""); // Error message
+const loading = ref(false); // Loading state
+
+// Function to determine role based on department
+const getRole = (dept) => {
+    if (dept.toLowerCase() === "finance") return "Finance";
+    if (dept.toLowerCase() === "management") return "Manager";
+    return "Employee"; // Default role
+};
 
 const handleAuth = async () => {
     message.value = "";
     error.value = "";
-
-    // Log the input values before submission
-    console.log("Email:", email.value);
-    console.log("Password:", password.value);
+    loading.value = true; // Show loading state
 
     try {
         let response;
@@ -31,30 +36,38 @@ const handleAuth = async () => {
                 email: email.value,
                 password: password.value
             });
-            if (response.success) {
-                message.value = "Login successful!";
-                router.push("/dashboard");
-            } else {
-                error.value = response.message;
-            }
         } else {
-            // Register
+            // Register (Role Assigned Automatically)
+            const assignedRole = getRole(department.value);
+
             response = await authStore.register({
                 name: name.value,
                 department: department.value,
                 email: email.value,
-                password: password.value
+                password: password.value,
+                role: assignedRole // Assign role dynamically
             });
-            if (response.success) {
-                message.value = response.message;
-                isLogin.value = true; // Switch to login after success
+        }
+
+        if (response.success) {
+            message.value = response.message;
+            localStorage.setItem("role", response.role); // Store role
+            localStorage.setItem("token", response.token); // Store token
+
+            // Redirect Based on Role
+            if (response.role === "Admin") {
+                router.push("/admin");
             } else {
-                error.value = response.message;
+                router.push("/dashboard");
             }
+        } else {
+            error.value = response.message;
         }
     } catch (err) {
         error.value = "An unexpected error occurred.";
         console.error(err);
+    } finally {
+        loading.value = false; // Hide loading state
     }
 };
 </script>
@@ -86,19 +99,21 @@ const handleAuth = async () => {
 
                         <div v-if="!isLogin" class="space-y-4">
                             <input v-model="name" type="text" placeholder="Full Name"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" />
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+
                             <input v-model="department" type="text" placeholder="Department"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" />
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
                         </div>
 
                         <input v-model="email" type="email" placeholder="Email"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" />
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
 
                         <input v-model="password" type="password" placeholder="Password"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" />
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
 
-                        <button @click="handleAuth" 
-                            class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200">
+                        <button @click="handleAuth" :disabled="loading"
+                            class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex justify-center items-center">
+                            <span v-if="loading" class="animate-spin mr-2">🔄</span>
                             {{ isLogin ? "Login" : "Register" }}
                         </button>
 

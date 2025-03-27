@@ -18,8 +18,11 @@ export const useAuthStore = defineStore("auth", {
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message || "Registration failed");
 
-                return { success: true, message: data.message };
+                return { success: true, message: "Registration successful! You can now log in." };
             } catch (error) {
+                if (error.message.includes("email already exists")) {
+                    return { success: false, message: "This email is already in use. Try logging in." };
+                }
                 return { success: false, message: error.message };
             }
         },
@@ -36,8 +39,11 @@ export const useAuthStore = defineStore("auth", {
                 if (!response.ok) throw new Error(data.message || "Login failed");
 
                 localStorage.setItem("token", data.token);
+                localStorage.setItem("role", data.role);
                 this.token = data.token;
-                return { success: true };
+                this.user = data.user; // Store user info
+
+                return { success: true, role: data.role, token: data.token };
             } catch (error) {
                 return { success: false, message: error.message };
             }
@@ -45,7 +51,9 @@ export const useAuthStore = defineStore("auth", {
 
         logout() {
             localStorage.removeItem("token");
+            localStorage.removeItem("role");
             this.token = "";
+            this.user = null;
         },
     },
 });
