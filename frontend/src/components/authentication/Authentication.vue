@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "vue-router";
 
@@ -7,9 +7,10 @@ import { useRouter } from "vue-router";
 const authStore = useAuthStore();
 const router = useRouter();
 
-const isLogin = ref(true); // Toggle between login and register
-const name = ref(""); // Only used for Register
-const department = ref(""); // Required for Register
+// Form State
+const isLogin = ref(true); // Toggle between login & register
+const name = ref(""); // Used only for Register
+const department = ref(""); // Used for assigning role
 const email = ref(""); // Email input
 const password = ref(""); // Password input
 const message = ref(""); // Success message
@@ -18,58 +19,88 @@ const loading = ref(false); // Loading state
 
 // Function to determine role based on department
 const getRole = (dept) => {
-    if (dept.toLowerCase() === "finance") return "Finance";
-    if (dept.toLowerCase() === "management") return "Manager";
-    return "Employee"; // Default role
+  if (!dept) return "Employee"; // Default role if no department is given
+  const lowerDept = dept.toLowerCase();
+  if (lowerDept === "finance") return "Finance";
+  if (lowerDept === "management") return "Manager";
+  if (lowerDept === "admin") return "Admin";
+  return "Employee"; // Default role
 };
 
+// Handle Login or Register
 const handleAuth = async () => {
-    message.value = "";
-    error.value = "";
-    loading.value = true; // Show loading state
+  message.value = "";
+  error.value = "";
+  loading.value = true;
 
-    try {
-        let response;
-        if (isLogin.value) {
-            // Login
-            response = await authStore.login({
-                email: email.value,
-                password: password.value
-            });
-        } else {
-            // Register (Role Assigned Automatically)
-            const assignedRole = getRole(department.value);
+  try {
+    let response;
+    if (isLogin.value) {
+      // User Login
+      response = await authStore.login({
+        email: email.value,
+        password: password.value,
+      });
+    } else {
+      // User Register (Role Assigned Automatically)
+      const assignedRole = getRole(department.value);
 
-            response = await authStore.register({
-                name: name.value,
-                department: department.value,
-                email: email.value,
-                password: password.value,
-                role: assignedRole // Assign role dynamically
-            });
-        }
-
-        if (response.success) {
-            message.value = response.message;
-            localStorage.setItem("role", response.role); // Store role
-            localStorage.setItem("token", response.token); // Store token
-
-            // Redirect Based on Role
-            if (response.role === "Admin") {
-                router.push("/admin");
-            } else {
-                router.push("/dashboard");
-            }
-        } else {
-            error.value = response.message;
-        }
-    } catch (err) {
-        error.value = "An unexpected error occurred.";
-        console.error(err);
-    } finally {
-        loading.value = false; // Hide loading state
+      response = await authStore.register({
+        name: name.value,
+        department: department.value,
+        email: email.value,
+        password: password.value,
+        role: assignedRole, // Assign role dynamically
+      });
     }
+
+    // If authentication is successful
+    if (response.success) {
+      message.value = response.message;
+
+      // Store token & role in localStorage
+      localStorage.setItem("role", response.role);
+      localStorage.setItem("token", response.token);
+
+      console.log("Stored Role:", localStorage.getItem("role")); // Debugging
+
+      // Redirect Based on Role
+      redirectUser(response.role);
+    } else {
+      error.value = response.message;
+    }
+  } catch (err) {
+    error.value = "An unexpected error occurred.";
+    console.error(err);
+  } finally {
+    loading.value = false;
+  }
 };
+
+// Redirect Based on Role
+const redirectUser = (role) => {
+  switch (role) {
+    case "Admin":
+      router.push("/admin");
+      break;
+    case "Finance":
+      router.push("/finance");
+      break;
+    case "Manager":
+      router.push("/manager");
+      break;
+    default:
+      router.push("/dashboard"); // Default for Employee
+  }
+};
+
+// Auto-Redirect if Already Logged In
+onMounted(() => {
+  const savedRole = localStorage.getItem("role");
+  if (savedRole) {
+    redirectUser(savedRole);
+  }
+});
 </script>
 
 <template>
