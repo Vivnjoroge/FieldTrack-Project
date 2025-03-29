@@ -1,13 +1,13 @@
 <script setup>
 import Header from '@/components/layouts/Header.vue'
-import Sidebar from '@/components/layouts/Sidebar.vue';
+import EmployeeSidebar from '@/components/sidebars/EmployeeSidebar.vue';
 import Navigation from '@/components/layouts/Navigation.vue';
 </script>
 
 <template>
   <div class="flex h-screen bg-gray-100">
     <!-- Sidebar -->
-    <Sidebar />
+    <EmployeeSidebar />
 
     <!-- Main content -->
     <div class="flex-1 flex flex-col overflow-hidden">
