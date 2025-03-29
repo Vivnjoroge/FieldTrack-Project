@@ -8,16 +8,21 @@ const pendingReimbursements = ref(0);
 const approvedRequests = ref(0);
 const recentSubmissions = ref([]);
 const pendingRequests = ref([]);
+const user = ref({
+  name: "John Doe",
+  email: "johndoe@example.com",
+  profilePic: "https://via.placeholder.com/150",
+});
 
-// Simulate fetching data from API (Replace with actual API call)
+// Fetch Dashboard Data
 const fetchDashboardData = async () => {
   try {
-    // Mock API response
-    totalExpenses.value = 5; // Example: 5 total submitted expenses
-    pendingReimbursements.value = 2; // Example: 2 reimbursements pending
-    approvedRequests.value = 3; // Example: 3 approved resource requests
+    // Replace with API call
+    totalExpenses.value = 5;
+    pendingReimbursements.value = 2;
+    approvedRequests.value = 3;
 
-    // Example data (Replace with API response)
+    // Example submissions
     recentSubmissions.value = [
       { id: 1, type: "Expense", status: "Pending", date: "2024-03-20" },
       { id: 2, type: "Resource", status: "Approved", date: "2024-03-18" },
@@ -35,9 +40,17 @@ onMounted(fetchDashboardData);
 
 <template>
   <div class="p-6">
-    <h1 class="text-2xl font-bold mb-4">Employee Dashboard</h1>
+    <!-- Profile Summary -->
+    <div class="bg-white shadow p-4 rounded-lg flex items-center mb-6">
+      <img :src="user.profilePic" alt="Profile Picture" class="w-16 h-16 rounded-full mr-4" />
+      <div>
+        <p class="text-xl font-semibold">{{ user.name }}</p>
+        <p class="text-gray-600">{{ user.email }}</p>
+        <router-link to="/profile" class="text-blue-500 underline">View Full Profile</router-link>
+      </div>
+    </div>
 
-    <!-- Summary Cards -->
+    <!-- Dashboard Stats -->
     <div class="grid grid-cols-3 gap-4 mb-6">
       <div class="bg-blue-500 text-white p-4 rounded-lg shadow">
         <h2 class="text-lg font-semibold">Total Expenses</h2>
@@ -57,8 +70,16 @@ onMounted(fetchDashboardData);
     <div class="mb-6">
       <h2 class="text-xl font-semibold mb-2">Recent Submissions</h2>
       <ul class="bg-white shadow rounded-lg p-4">
-        <li v-for="item in recentSubmissions" :key="item.id" class="py-2 border-b last:border-b-0">
-          <span class="font-semibold">{{ item.type }}</span> - {{ item.status }} ({{ item.date }})
+        <li v-for="item in recentSubmissions" :key="item.id" class="py-2 border-b last:border-b-0 flex justify-between">
+          <span class="font-semibold">{{ item.type }}</span>
+          <span :class="{
+            'text-yellow-600': item.status === 'Pending',
+            'text-green-600': item.status === 'Approved',
+            'text-red-600': item.status === 'Rejected'
+          }">
+            {{ item.status }}
+          </span>
+          <span>{{ item.date }}</span>
         </li>
       </ul>
     </div>
@@ -67,8 +88,10 @@ onMounted(fetchDashboardData);
     <div class="mb-6">
       <h2 class="text-xl font-semibold mb-2">Pending Requests</h2>
       <ul class="bg-white shadow rounded-lg p-4">
-        <li v-for="item in pendingRequests" :key="item.id" class="py-2 border-b last:border-b-0">
-          <span class="font-semibold">{{ item.type }}</span> - {{ item.status }} ({{ item.date }})
+        <li v-for="item in pendingRequests" :key="item.id" class="py-2 border-b last:border-b-0 flex justify-between">
+          <span class="font-semibold">{{ item.type }}</span>
+          <span class="text-yellow-600">{{ item.status }}</span>
+          <span>{{ item.date }}</span>
         </li>
       </ul>
     </div>

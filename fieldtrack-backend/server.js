@@ -10,6 +10,7 @@ const employees = require("./routes/employees");
 const expenses = require("./routes/expenses");
 const resources = require("./routes/resources");
 const approvals = require("./routes/approvals");
+const profile = require("./routes/profile"); // ✅ Import Profile Route
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,10 +30,10 @@ app.use("/api/employees", employees);
 app.use("/api/expenses", expenses);
 app.use("/api/resources", resources);
 app.use("/api/approvals", approvals);
+app.use("/api/profile", profile); // ✅ Add Profile API
 
 const expressListEndpoints = require("express-list-endpoints");
 console.log(expressListEndpoints(app));
-
 
 // Start Server
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
