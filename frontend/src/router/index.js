@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import AuthenticationView from "@/views/AuthenticationView.vue";
 import DashboardView from "@/views/DashboardView.vue";
+import ExpenseView from "@/views/ExpenseView.vue";
 import FinancePanel from "@/components/dashboard/FinancePanel.vue";
 import ManagerPanel from "@/components/dashboard/ManagerPanel.vue";
 import AdminPanel from "@/components/dashboard/AdminPanel.vue";
@@ -9,6 +10,7 @@ const routes = [
   { path: "/", redirect: "/auth" }, // Default route to authentication
   { path: "/auth", component: AuthenticationView },
   { path: "/dashboard", component: DashboardView, meta: { requiresAuth: true } },
+  { path: "/expenses", component: ExpenseView, meta: { requiresAuth: true } }, // ✅ Expense Route
   { path: "/admin", component: AdminPanel, meta: { requiresAuth: true, role: "Admin" } },
   { path: "/finance", component: FinancePanel, meta: { requiresAuth: true, role: "Finance" } },
   { path: "/manager", component: ManagerPanel, meta: { requiresAuth: true, role: "Manager" } },

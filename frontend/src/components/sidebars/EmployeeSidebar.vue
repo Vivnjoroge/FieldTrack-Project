@@ -6,8 +6,8 @@ const router = useRouter();
 // Employee Sidebar Menu
 const employeeMenu = [
   { name: "Dashboard", path: "/dashboard", icon: "📊" },
-  { name: "Submit Expense", path: "/submit-expense", icon: "💰" },
-  { name: "Request Resources", path: "/request-resources", icon: "🛠️" },
+  { name: "Submit Expense", path: "/expenses", icon: "💰" },
+  { name: "Request Resources", path: "/resources", icon: "🛠️" },
   { name: "Request Reimbursement", path: "/request-reimbursement", icon: "🔄" },
   { name: "View Status", path: "/status", icon: "📋" },
 ];
