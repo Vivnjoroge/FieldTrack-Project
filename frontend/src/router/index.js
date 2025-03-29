@@ -24,11 +24,12 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
+  // If not authenticated, redirect to login
   if (to.meta.requiresAuth && !token) {
-    next("/auth"); // If not logged in, go to login page
+    next("/auth");
   } 
-  else if (to.meta.role && to.meta.role !== role) {
-    // Redirect based on role
+  // If trying to access auth while logged in, redirect to dashboard
+  else if (token && to.path === "/auth") {
     if (role === "Admin") {
       next("/admin");
     } else if (role === "Finance") {
@@ -36,13 +37,11 @@ router.beforeEach((to, from, next) => {
     } else if (role === "Manager") {
       next("/manager");
     } else {
-      next("/auth"); // 🛠 Instead of /dashboard, redirect to login
+      next("/dashboard");
     }
-  } 
-  else {
-    next();
+  } else {
+    next(); // Allow navigation
   }
 });
-
 
 export default router;

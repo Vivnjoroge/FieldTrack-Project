@@ -1,7 +1,7 @@
-<!-- src/components/Layout.vue -->
 <script setup>
-import Header from './Header.vue';
-import Sidebar from './Sidebar.vue';
+import Header from '@/components/layouts/Header.vue'
+import Sidebar from '@/components/layouts/Sidebar.vue';
+import Navigation from '@/components/layouts/Navigation.vue';
 </script>
 
 <template>
@@ -11,6 +11,9 @@ import Sidebar from './Sidebar.vue';
 
     <!-- Main content -->
     <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Navigation (Including Logout Button) -->
+      <Navigation />
+
       <!-- Header -->
       <Header />
 

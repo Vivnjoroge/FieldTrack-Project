@@ -77,21 +77,9 @@ const handleAuth = async () => {
   }
 };
 
-// Redirect Based on Role
+// ✅ Updated: Redirect all roles to `/dashboard`
 const redirectUser = (role) => {
-  switch (role) {
-    case "Admin":
-      router.push("/admin");
-      break;
-    case "Finance":
-      router.push("/finance");
-      break;
-    case "Manager":
-      router.push("/manager");
-      break;
-    default:
-      router.push("/dashboard"); // Default for Employee
-  }
+  router.push("/dashboard");
 };
 
 // Auto-Redirect if Already Logged In
@@ -104,62 +92,63 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="min-h-screen flex items-center justify-center bg-gray-50">
-        <div class="flex w-full max-w-4xl">
-            <!-- Image Side -->
-            <div class="hidden lg:block w-1/2 bg-cover bg-center rounded-l-lg" 
-                 style="background-image: url('https://images.unsplash.com/photo-1551632436-c318874f08c7?auto=format&fit=crop&w=1200');">
-                <div class="h-full bg-black/30 flex items-center justify-center p-8">
-                    <div class="text-white text-center">
-                        <h1 class="text-4xl font-bold mb-4">Welcome to FieldTrack</h1>
-                        <p class="text-lg">Manage your field expenses and resources efficiently</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Form Side -->
-            <div class="w-full lg:w-1/2 p-8">
-                <div class="bg-white rounded-lg shadow-xl p-8">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
-                        {{ isLogin ? "Welcome Back" : "Create Account" }}
-                    </h2>
-
-                    <div class="space-y-4">
-                        <p v-if="message" class="text-green-500 text-center">{{ message }}</p>
-                        <p v-if="error" class="text-red-500 text-center">{{ error }}</p>
-
-                        <div v-if="!isLogin" class="space-y-4">
-                            <input v-model="name" type="text" placeholder="Full Name"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
-
-                            <input v-model="department" type="text" placeholder="Department"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
-                        </div>
-
-                        <input v-model="email" type="email" placeholder="Email"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
-
-                        <input v-model="password" type="password" placeholder="Password"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
-
-                        <button @click="handleAuth" :disabled="loading"
-                            class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex justify-center items-center">
-                            <span v-if="loading" class="animate-spin mr-2">🔄</span>
-                            {{ isLogin ? "Login" : "Register" }}
-                        </button>
-
-                        <div class="text-center mt-6">
-                            <p class="text-sm text-gray-600">
-                                {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
-                                <button @click="isLogin = !isLogin" 
-                                    class="text-blue-600 font-medium hover:text-blue-700 transition-all duration-200">
-                                    {{ isLogin ? "Register" : "Login" }}
-                                </button>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50">
+    <div class="flex w-full max-w-4xl">
+      <!-- Image Side -->
+      <div class="hidden lg:block w-1/2 bg-cover bg-center rounded-l-lg" 
+           style="background-image: url('https://images.unsplash.com/photo-1551632436-c318874f08c7?auto=format&fit=crop&w=1200');">
+        <div class="h-full bg-black/30 flex items-center justify-center p-8">
+          <div class="text-white text-center">
+            <h1 class="text-4xl font-bold mb-4">Welcome to FieldTrack</h1>
+            <p class="text-lg">Manage your field expenses and resources efficiently</p>
+          </div>
         </div>
+      </div>
+
+      <!-- Form Side -->
+      <div class="w-full lg:w-1/2 p-8">
+        <div class="bg-white rounded-lg shadow-xl p-8">
+          <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+            {{ isLogin ? "Welcome Back" : "Create Account" }}
+          </h2>
+
+          <div class="space-y-4">
+            <p v-if="message" class="text-green-500 text-center">{{ message }}</p>
+            <p v-if="error" class="text-red-500 text-center">{{ error }}</p>
+
+            <div v-if="!isLogin" class="space-y-4">
+              <input v-model="name" type="text" placeholder="Full Name"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+
+              <input v-model="department" type="text" placeholder="Department"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+            </div>
+
+            <input v-model="email" type="email" placeholder="Email"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+
+            <input v-model="password" type="password" placeholder="Password"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+
+            <button @click="handleAuth" :disabled="loading"
+              class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex justify-center items-center">
+              <span v-if="loading" class="animate-spin mr-2">🔄</span>
+              {{ isLogin ? "Login" : "Register" }}
+            </button>
+
+            <div class="text-center mt-6">
+              <p class="text-sm text-gray-600">
+                {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
+                <button @click="isLogin = !isLogin" 
+                  class="text-blue-600 font-medium hover:text-blue-700 transition-all duration-200">
+                  {{ isLogin ? "Register" : "Login" }}
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
+
