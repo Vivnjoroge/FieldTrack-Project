@@ -9,19 +9,32 @@ router.post("/", verifyToken, (req, res) => {
     const { id, role } = req.user; // Get user ID and role from token
     const date_submitted = new Date();
 
+    // Debugging: Log received request
+    console.log("🔍 Received Request:", req.body);
+    console.log("🔍 User ID:", id, "Role:", role);
+
+    // Check if all fields are present
+    if (!expense_type || !amount || !description) {
+        return res.status(400).json({ message: "Missing required fields!" });
+    }
+
     if (role !== "Employee") {
         return res.status(403).json({ message: "Only employees can submit expenses!" });
     }
 
     db.query(
-        "INSERT INTO Expense (Employee_ID, Expense_Type, Amount, Description, Receipt, Date_Submitted, Status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')", 
-        [id, expense_type, amount, description, receipt, date_submitted], 
+        "INSERT INTO Expense (Employee_ID, Expense_Type, Amount, Description, Receipt, Date_Submitted, Approval_Status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')", 
+        [id, expense_type, amount, description, receipt || null, date_submitted], 
         (err, result) => {
-            if (err) return res.status(500).json({ message: "Error creating expense" });
+            if (err) {
+                console.error("❌ Database Error:", err);
+                return res.status(500).json({ message: "Error creating expense", error: err });
+            }
             res.json({ message: "Expense submitted successfully!" });
         }
     );
 });
+
 
 // ✅ 2. Finance Approves Expenses
 router.put("/approve/:expenseId", verifyToken, (req, res) => {
