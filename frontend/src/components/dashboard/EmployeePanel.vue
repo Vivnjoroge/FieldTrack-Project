@@ -101,7 +101,7 @@ onMounted(fetchDashboardData);
       <button @click="router.push('/expenses')" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
         Submit Expense
       </button>
-      <button @click="router.push('/request-resources')" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+      <button @click="router.push('/resources')" class="bg-green-600 text-white px-4 py-2 rounded-lg">
         Request Resources
       </button>
     </div>

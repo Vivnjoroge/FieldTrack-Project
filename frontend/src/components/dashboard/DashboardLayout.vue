@@ -1,6 +1,7 @@
 <script setup>
 import Header from '@/components/layouts/Header.vue'
 import EmployeeSidebar from '@/components/sidebars/EmployeeSidebar.vue';
+
 import Navigation from '@/components/layouts/Navigation.vue';
 </script>
 
@@ -8,6 +9,7 @@ import Navigation from '@/components/layouts/Navigation.vue';
   <div class="flex h-screen bg-gray-100">
     <!-- Sidebar -->
     <EmployeeSidebar />
+   
 
     <!-- Main content -->
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -23,6 +25,7 @@ import Navigation from '@/components/layouts/Navigation.vue';
       </main>
     </div>
   </div>
+  
 </template>
 
 <style scoped>
