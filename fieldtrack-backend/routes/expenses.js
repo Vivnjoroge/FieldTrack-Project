@@ -5,116 +5,175 @@ const verifyToken = require("../middleware/auth");
 
 // ✅ 1. Employees Submit Expenses
 router.post("/", verifyToken, (req, res) => {
-    const { expense_type, amount, description, receipt } = req.body;
-    const { id, role } = req.user; // Get user ID and role from token
-    const date_submitted = new Date();
+    try {
+        const { expense_type, amount, description, receipt } = req.body;
+        console.log("🟢 Received Data:", req.body);
 
-    // Debugging: Log received request
-    console.log("🔍 Received Request:", req.body);
-    console.log("🔍 User ID:", id, "Role:", role);
-
-    // Check if all fields are present
-    if (!expense_type || !amount || !description) {
-        return res.status(400).json({ message: "Missing required fields!" });
-    }
-
-    if (role !== "Employee") {
-        return res.status(403).json({ message: "Only employees can submit expenses!" });
-    }
-
-    db.query(
-        "INSERT INTO Expense (Employee_ID, Expense_Type, Amount, Description, Receipt, Date_Submitted, Approval_Status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')", 
-        [id, expense_type, amount, description, receipt || null, date_submitted], 
-        (err, result) => {
-            if (err) {
-                console.error("❌ Database Error:", err);
-                return res.status(500).json({ message: "Error creating expense", error: err });
-            }
-            res.json({ message: "Expense submitted successfully!" });
+        if (!expense_type || !amount || !description) {
+            return res.status(400).json({ message: "Missing required fields!" });
         }
-    );
+
+        const { id, role } = req.user;
+        if (!id) {
+            return res.status(401).json({ message: "User authentication failed!" });
+        }
+        if (role !== "Employee") {
+            return res.status(403).json({ message: "Only employees can submit expenses!" });
+        }
+
+        const date_submitted = new Date().toISOString().split('T')[0]; // Ensure correct date format
+
+        db.query(
+            `INSERT INTO Expense (Employee_ID, Expense_Type, Amount, Description, Receipt, Date_Submitted, Approval_Status) 
+             VALUES (?, ?, ?, ?, ?, ?, 'Pending')`,
+            [id, expense_type, amount, description, receipt || null, date_submitted],
+            (err, result) => {
+                if (err) {
+                    console.error("❌ Database Insert Error:", err);
+                    return res.status(500).json({ message: "Error creating expense", error: err });
+                }
+                console.log("✅ Inserted Data Successfully!", result);
+                res.json({ message: "Expense submitted successfully!", expenseId: result.insertId });
+            }
+        );
+    } catch (error) {
+        console.error("❌ Unexpected Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 });
 
 
 // ✅ 2. Finance Approves Expenses
 router.put("/approve/:expenseId", verifyToken, (req, res) => {
-    const { role } = req.user;
-    const { expenseId } = req.params;
+    try {
+        const { role } = req.user;
+        const { expenseId } = req.params;
 
-    if (role !== "Finance") {
-        return res.status(403).json({ message: "Only Finance can approve expenses!" });
-    }
+        if (!expenseId) return res.status(400).json({ message: "Expense ID is required!" });
 
-    db.query(
-        "UPDATE Expense SET Status = 'Approved' WHERE ID = ? AND Status = 'Pending'", 
-        [expenseId], 
-        (err, result) => {
-            if (err) return res.status(500).json({ message: "Error approving expense" });
-            if (result.affectedRows === 0) return res.status(400).json({ message: "Expense not found or already processed!" });
-
-            res.json({ message: "Expense approved successfully!" });
+        if (role !== "Finance") {
+            return res.status(403).json({ message: "Only Finance can approve expenses!" });
         }
-    );
+
+        db.query(
+            "UPDATE Expense SET Approval_Status = 'Approved' WHERE Expense_ID = ? AND Approval_Status = 'Pending'", 
+            [expenseId], 
+            (err, result) => {
+                if (err) {
+                    console.error("❌ Database Error:", err);
+                    return res.status(500).json({ message: "Error approving expense" });
+                }
+                if (result.affectedRows === 0) {
+                    return res.status(404).json({ message: "Expense not found or already processed!" });
+                }
+
+                res.json({ message: "Expense approved successfully!" });
+            }
+        );
+    } catch (error) {
+        console.error("❌ Unexpected Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 });
 
 // ✅ 3. Finance Rejects Expenses
 router.put("/reject/:expenseId", verifyToken, (req, res) => {
-    const { role } = req.user;
-    const { expenseId } = req.params;
+    try {
+        const { role } = req.user;
+        const { expenseId } = req.params;
 
-    if (role !== "Finance") {
-        return res.status(403).json({ message: "Only Finance can reject expenses!" });
-    }
+        if (!expenseId) return res.status(400).json({ message: "Expense ID is required!" });
 
-    db.query(
-        "UPDATE Expense SET Status = 'Rejected' WHERE ID = ? AND Status = 'Pending'", 
-        [expenseId], 
-        (err, result) => {
-            if (err) return res.status(500).json({ message: "Error rejecting expense" });
-            if (result.affectedRows === 0) return res.status(400).json({ message: "Expense not found or already processed!" });
-
-            res.json({ message: "Expense rejected successfully!" });
+        if (role !== "Finance") {
+            return res.status(403).json({ message: "Only Finance can reject expenses!" });
         }
-    );
+
+        db.query(
+            "UPDATE Expense SET Approval_Status = 'Rejected' WHERE Expense_ID = ? AND Approval_Status = 'Pending'", 
+            [expenseId], 
+            (err, result) => {
+                if (err) {
+                    console.error("❌ Database Error:", err);
+                    return res.status(500).json({ message: "Error rejecting expense" });
+                }
+                if (result.affectedRows === 0) {
+                    return res.status(404).json({ message: "Expense not found or already processed!" });
+                }
+
+                res.json({ message: "Expense rejected successfully!" });
+            }
+        );
+    } catch (error) {
+        console.error("❌ Unexpected Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 });
 
-// ✅ 4. Get Expenses (Employees see their own, Finance sees pending)
+// ✅ 4. Get Expenses (Employees see their own, Finance sees all)
 router.get("/", verifyToken, (req, res) => {
-    const { id, role } = req.user;
+    try {
+        const { id, role } = req.user;
 
-    let query = "SELECT * FROM Expense WHERE Employee_ID = ?";
-    let params = [id];
+        if (!id) return res.status(401).json({ message: "User authentication failed!" });
 
-    if (role === "Finance") {
-        query = "SELECT * FROM Expense WHERE Status = 'Pending'"; // Finance sees pending expenses
-        params = [];
+        let query = "SELECT * FROM Expense WHERE Employee_ID = ?";
+        let params = [id];
+
+        if (role === "Finance") {
+            query = "SELECT * FROM Expense"; // Finance sees all expenses
+            params = [];
+        }
+
+        console.log("🟢 Executing Query:", query);
+        console.log("🟢 Query Parameters:", params);
+
+        db.query(query, params, (err, results) => {
+            if (err) {
+                console.error("❌ Database Error:", err);
+                return res.status(500).json({ message: "Error fetching expenses" });
+            }
+
+            console.log("🟢 Query Results:", results);
+            res.json(results);
+        });
+    } catch (error) {
+        console.error("❌ Unexpected Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-
-    db.query(query, params, (err, results) => {
-        if (err) return res.status(500).json({ message: "Error fetching expenses" });
-        res.json(results);
-    });
 });
 
 // ✅ 5. Get Expense by ID
 router.get("/:expenseId", verifyToken, (req, res) => {
-    const { expenseId } = req.params;
-    const { id, role } = req.user;
+    try {
+        const { expenseId } = req.params;
+        const { id, role } = req.user;
 
-    let query = "SELECT * FROM Expense WHERE ID = ? AND Employee_ID = ?";
-    let params = [expenseId, id];
+        if (!expenseId) return res.status(400).json({ message: "Expense ID is required!" });
 
-    if (role === "Finance") {
-        query = "SELECT * FROM Expense WHERE ID = ?";
-        params = [expenseId];
+        let query = "SELECT * FROM Expense WHERE Expense_ID = ? AND Employee_ID = ?";
+        let params = [expenseId, id];
+
+        if (role === "Finance") {
+            query = "SELECT * FROM Expense WHERE Expense_ID = ?";
+            params = [expenseId];
+        }
+
+        db.query(query, params, (err, results) => {
+            if (err) {
+                console.error("❌ Database Error:", err);
+                return res.status(500).json({ message: "Error fetching expense details" });
+            }
+            if (results.length === 0) {
+                return res.status(404).json({ message: "Expense not found!" });
+            }
+
+            res.json(results[0]);
+        });
+    } catch (error) {
+        console.error("❌ Unexpected Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-
-    db.query(query, params, (err, results) => {
-        if (err) return res.status(500).json({ message: "Error fetching expense details" });
-        if (results.length === 0) return res.status(404).json({ message: "Expense not found!" });
-
-        res.json(results[0]);
-    });
 });
 
 module.exports = router;
+

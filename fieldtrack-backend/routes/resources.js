@@ -14,10 +14,13 @@ router.post("/", verifyToken, (req, res) => {
     }
 
     db.query(
-        "INSERT INTO Resource (Employee_ID, Resource_Name, Quantity, Reason, Date_Requested, Status) VALUES (?, ?, ?, ?, ?, 'Pending')", 
+        "INSERT INTO Resource (Employee_ID, Resource_Name, Quantity, Reason, Date_Requested, Status) VALUES (?, ?, ?, ?, ?, 'Pending')",
         [id, resource_name, quantity, reason, date_requested], 
         (err, result) => {
-            if (err) return res.status(500).json({ message: "Error requesting resource" });
+            if (err) {
+                console.error("Database Error:", err.sqlMessage); // Log the error message
+                return res.status(500).json({ message: "Error requesting resource", error: err.sqlMessage });
+            }
             res.json({ message: "Resource request submitted successfully!" });
         }
     );
@@ -33,11 +36,16 @@ router.put("/approve/:resourceId", verifyToken, (req, res) => {
     }
 
     db.query(
-        "UPDATE Resource SET Status = 'Approved' WHERE ID = ? AND Status = 'Pending'", 
+        "UPDATE Resource SET Status = 'Approved' WHERE Resource_ID = ? AND Status = 'Pending'", 
         [resourceId], 
         (err, result) => {
-            if (err) return res.status(500).json({ message: "Error approving resource request" });
-            if (result.affectedRows === 0) return res.status(400).json({ message: "Resource not found or already processed!" });
+            if (err) {
+                console.error("Database Error:", err.sqlMessage);
+                return res.status(500).json({ message: "Error approving resource request", error: err.sqlMessage });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(400).json({ message: "Resource not found or already processed!" });
+            }
 
             res.json({ message: "Resource request approved successfully!" });
         }
@@ -54,11 +62,16 @@ router.put("/reject/:resourceId", verifyToken, (req, res) => {
     }
 
     db.query(
-        "UPDATE Resource SET Status = 'Rejected' WHERE ID = ? AND Status = 'Pending'", 
+        "UPDATE Resource SET Status = 'Rejected' WHERE Resource_ID = ? AND Status = 'Pending'", 
         [resourceId], 
         (err, result) => {
-            if (err) return res.status(500).json({ message: "Error rejecting resource request" });
-            if (result.affectedRows === 0) return res.status(400).json({ message: "Resource not found or already processed!" });
+            if (err) {
+                console.error("Database Error:", err.sqlMessage);
+                return res.status(500).json({ message: "Error rejecting resource request", error: err.sqlMessage });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(400).json({ message: "Resource not found or already processed!" });
+            }
 
             res.json({ message: "Resource request rejected successfully!" });
         }
@@ -78,7 +91,10 @@ router.get("/", verifyToken, (req, res) => {
     }
 
     db.query(query, params, (err, results) => {
-        if (err) return res.status(500).json({ message: "Error fetching resource requests" });
+        if (err) {
+            console.error("Database Error:", err.sqlMessage);
+            return res.status(500).json({ message: "Error fetching resource requests", error: err.sqlMessage });
+        }
         res.json(results);
     });
 });
@@ -88,21 +104,25 @@ router.get("/:resourceId", verifyToken, (req, res) => {
     const { resourceId } = req.params;
     const { id, role } = req.user;
 
-    let query = "SELECT * FROM Resource WHERE ID = ? AND Employee_ID = ?";
+    let query = "SELECT * FROM Resource WHERE Resource_ID = ? AND Employee_ID = ?";
     let params = [resourceId, id];
 
     if (role === "Manager") {
-        query = "SELECT * FROM Resource WHERE ID = ?";
+        query = "SELECT * FROM Resource WHERE Resource_ID = ?";
         params = [resourceId];
     }
 
     db.query(query, params, (err, results) => {
-        if (err) return res.status(500).json({ message: "Error fetching resource details" });
-        if (results.length === 0) return res.status(404).json({ message: "Resource request not found!" });
+        if (err) {
+            console.error("Database Error:", err.sqlMessage);
+            return res.status(500).json({ message: "Error fetching resource details", error: err.sqlMessage });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ message: "Resource request not found!" });
+        }
 
         res.json(results[0]);
     });
 });
 
 module.exports = router;
-
