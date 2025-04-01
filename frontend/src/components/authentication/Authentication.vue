@@ -8,14 +8,15 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 // Form State
-const isLogin = ref(true); // Toggle between login & register
-const name = ref(""); // Used only for Register
-const department = ref(""); // Used for assigning role
-const email = ref(""); // Email input
-const password = ref(""); // Password input
+const name = ref(""); // Only for Register
+const department = ref(""); // Only for Register
+const email = ref(""); // Used in both login & register
+const password = ref(""); // Used in both login & register
 const message = ref(""); // Success message
 const error = ref(""); // Error message
 const loading = ref(false); // Loading state
+const showPassword = ref(false); // Toggle password visibility
+const isRegister = ref(false); // Determines if user is logging in or registering
 
 // Function to determine role based on department
 const getRole = (dept) => {
@@ -35,14 +36,8 @@ const handleAuth = async () => {
 
   try {
     let response;
-    if (isLogin.value) {
-      // User Login
-      response = await authStore.login({
-        email: email.value,
-        password: password.value,
-      });
-    } else {
-      // User Register (Role Assigned Automatically)
+    if (isRegister.value) {
+      // User Register (Assign Role)
       const assignedRole = getRole(department.value);
 
       response = await authStore.register({
@@ -50,21 +45,24 @@ const handleAuth = async () => {
         department: department.value,
         email: email.value,
         password: password.value,
-        role: assignedRole, // Assign role dynamically
+        role: assignedRole,
+      });
+    } else {
+      // User Login
+      response = await authStore.login({
+        email: email.value,
+        password: password.value,
       });
     }
 
-    // If authentication is successful
     if (response.success) {
       message.value = response.message;
-
-      // Store token & role in localStorage
       localStorage.setItem("role", response.role);
       localStorage.setItem("token", response.token);
 
       console.log("Stored Role:", localStorage.getItem("role")); // Debugging
 
-      // Redirect Based on Role
+      // Redirect user
       redirectUser(response.role);
     } else {
       error.value = response.message;
@@ -77,7 +75,7 @@ const handleAuth = async () => {
   }
 };
 
-// ✅ Updated: Redirect all roles to `/dashboard`
+// Redirect user after login/register
 const redirectUser = (role) => {
   router.push("/dashboard");
 };
@@ -93,56 +91,69 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="flex w-full h-full">
-      <!-- Image Side -->
-      <div class="w-full lg:w-1/2 bg-cover bg-center bg-image h-full flex items-center justify-center">
-        <div class="h-full w-full bg-black bg-opacity-40 flex items-center justify-center">
-          <div class="text-white text-center p-8">
-            <h1 class="text-4xl font-semibold mb-4">Welcome to FieldTrack</h1>
-            <p class="text-lg">Manage your field expenses and resources efficiently</p>
-          </div>
+    <div class="flex w-full h-screen">
+      <!-- Left Section - Branding -->
+      <div class="w-full lg:w-2/5 bg-cover bg-center relative left-section">
+        <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white px-8 text-center">
+          <h2 class="text-2xl font-semibold">Field Management System</h2>
+          <p class="mt-3 text-sm leading-relaxed">
+            Streamline your field operations, manage teams efficiently, and track progress in real-time.
+          </p>
         </div>
       </div>
 
-      <!-- Form Side -->
-      <div class="w-full lg:w-1/2 p-8">
-        <div class="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h2 class="text-3xl font-semibold text-gray-800 mb-6 text-center">
-            {{ isLogin ? "Welcome Back" : "Create Account" }}
+      <!-- Right Section - Form -->
+      <div class="w-full lg:w-3/5 flex items-center justify-center p-8">
+        <div class="max-w-md w-full bg-white p-8 shadow-lg rounded-md">
+          <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">
+            Welcome to Field Management System
           </h2>
 
-          <div class="space-y-4">
-            <p v-if="message" class="text-green-500 text-center">{{ message }}</p>
-            <p v-if="error" class="text-red-500 text-center">{{ error }}</p>
+          <p class="text-center text-sm text-gray-600 mb-4">
+            Please login or register to continue.
+          </p>
 
-            <!-- Conditional fields for Register -->
-            <div v-if="!isLogin" class="space-y-4">
+          <!-- Success & Error Messages -->
+          <p v-if="message" class="text-green-600 text-center">{{ message }}</p>
+          <p v-if="error" class="text-red-500 text-center">{{ error }}</p>
+
+          <!-- Form Inputs -->
+          <div class="space-y-4">
+            <!-- Register Fields (Only Visible in Register Mode) -->
+            <div v-if="isRegister" class="space-y-4">
               <input v-model="name" type="text" placeholder="Full Name"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+                class="input-field" required />
 
               <input v-model="department" type="text" placeholder="Department"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+                class="input-field" required />
             </div>
 
-            <!-- Common fields for both Login & Register -->
-            <input v-model="email" type="email" placeholder="Email"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+            <!-- Common Fields for Login & Register -->
+            <input v-model="email" type="email" placeholder="Enter your work email"
+              class="input-field" required />
 
-            <input v-model="password" type="password" placeholder="Password"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-200" required />
+            <div class="relative">
+              <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Enter password"
+                class="input-field" required />
+              <button @click="showPassword = !showPassword" type="button"
+                class="absolute right-3 top-3 text-gray-500 focus:outline-none">
+                {{ showPassword ? '🙈' : '👁️' }}
+              </button>
+            </div>
 
+            <!-- Submit Button -->
             <button @click="handleAuth" :disabled="loading"
-              class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex justify-center items-center">
-              <span v-if="loading" class="animate-spin mr-2">🔄</span>
-              {{ isLogin ? "Login" : "Register" }}
+              class="btn-primary">
+              {{ isRegister ? "Register" : "Login" }}
             </button>
 
-            <div class="text-center mt-6">
-              <p class="text-sm text-gray-600">
-                {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
-                <button @click="isLogin = !isLogin" 
-                  class="text-blue-600 font-medium hover:text-blue-700 transition-all duration-200">
-                  {{ isLogin ? "Register" : "Login" }}
+            <div class="flex justify-between items-center text-sm mt-4">
+              <a href="#" class="text-blue-600 hover:underline">Forgot password?</a>
+              <p>
+                {{ isRegister ? "Already have an account?" : "New to the system?" }}
+                <button @click="isRegister = !isRegister"
+                  class="text-blue-600 font-medium hover:underline">
+                  {{ isRegister ? "Login" : "Register" }}
                 </button>
               </p>
             </div>
@@ -154,19 +165,52 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Custom styles */
+/* General Layout */
 .bg-gray-100 {
-  background-color: #f3f4f6;
+  background-color: #f9fafb;
 }
 
-.bg-image {
-  background-image: url('@/img/expense.jpg'); /* Ensure this path matches your actual image location */
+.left-section {
+  background-image: url('@/img/expense.jpg'); /* Ensure this is the correct path */
   background-size: cover;
   background-position: center;
-  height: 100%; /* Ensures the image fills the full height */
-  width: 100%; /* Ensures the image fills the full width */
+  height: 100vh;
+  position: relative;
+}
+
+/* Form Inputs */
+.input-field {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease-in-out;
+}
+
+.input-field:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+  outline: none;
+}
+
+/* Buttons */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: background 0.3s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: #1e40af;
+}
+
+.btn-primary:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
 }
 </style>
-
-
-

@@ -18,11 +18,13 @@ const navigate = (path) => {
 </script>
 
 <template>
-  <aside class="w-64 bg-green-800 text-white h-screen p-4">
+
+  <aside class="w-64 bg-gray-800 text-white h-screen p-4">
+
     <h2 class="text-xl font-bold mb-6">Finance Panel</h2>
     <ul>
       <li v-for="item in financeMenu" :key="item.path" 
-          class="mb-2 px-4 py-2 hover:bg-green-700 cursor-pointer rounded-lg flex items-center"
+          class="mb-2 px-4 py-2 hover:bg-gray-700 cursor-pointer rounded-lg flex items-center"
           @click="navigate(item.path)">
         <span class="mr-2">{{ item.icon }}</span> {{ item.name }}
       </li>
