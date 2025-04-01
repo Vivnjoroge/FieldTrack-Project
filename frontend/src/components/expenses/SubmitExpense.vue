@@ -119,17 +119,24 @@ onMounted(fetchExpenses);
 
 <template>
   <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-2xl font-semibold mb-4">Expense Management</h2>
-
-    <p v-if="message" class="text-center text-sm py-2 rounded-md" :class="messageClass">
-      {{ message }}
-    </p>
-
     <!-- Toggle Button -->
-    <button @click="showForm = !showForm"
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-bold text-gray-800">
+        {{ showForm ? "Submit Expense" : "Submit Expenses" }}
+      </h2>
+      <button
+        @click="showForm = !showForm"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+      >
+        {{ showForm ? "View Expenses" : "Submit Expenses" }}
+      </button>
+    </div>
+
+  
+    <!-- <button @click="showForm = !showForm"
       class="w-full mb-4 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition duration-200">
       {{ showForm ? "View Expenses" : "Submit Expense" }}
-    </button>
+    </button> -->
 
     <!-- Expense Submission Form -->
     <form v-if="showForm" @submit.prevent="handleSubmit" class="space-y-4">

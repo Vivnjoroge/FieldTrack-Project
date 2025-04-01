@@ -1,15 +1,36 @@
 <script setup>
-import Header from '@/components/layouts/Header.vue'
+import { ref, computed, onMounted } from 'vue';
+import Header from '@/components/layouts/Header.vue';
 import EmployeeSidebar from '@/components/sidebars/EmployeeSidebar.vue';
-
+import ManagerSidebar from '@/components/sidebars/ManagerSidebar.vue';
+import FinanceSidebar from '@/components/sidebars/FinanceSidebar.vue';
 import Navigation from '@/components/layouts/Navigation.vue';
+
+// ✅ Fetch role from localStorage (or API) when component loads
+const userRole = ref(localStorage.getItem("role") || "Employee");
+
+// ✅ Compute the correct sidebar dynamically
+const SidebarComponent = computed(() => {
+  switch (userRole.value) {
+    case "Manager":
+      return ManagerSidebar;
+    case "Finance":
+      return FinanceSidebar;
+    default:
+      return EmployeeSidebar;
+  }
+});
+
+// ✅ Ensure role is updated on page refresh
+onMounted(() => {
+  userRole.value = localStorage.getItem("role") || "Employee";
+});
 </script>
 
 <template>
   <div class="flex h-screen bg-gray-100">
-    <!-- Sidebar -->
-    <EmployeeSidebar />
-   
+    <!-- Dynamically load the correct Sidebar -->
+    <component :is="SidebarComponent" />
 
     <!-- Main content -->
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -25,7 +46,6 @@ import Navigation from '@/components/layouts/Navigation.vue';
       </main>
     </div>
   </div>
-  
 </template>
 
 <style scoped>
