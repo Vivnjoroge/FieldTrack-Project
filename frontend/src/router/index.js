@@ -6,6 +6,7 @@ import FinancePanel from "@/components/dashboard/FinancePanel.vue";
 import ManagerPanel from "@/components/dashboard/ManagerPanel.vue";
 import AdminPanel from "@/components/dashboard/AdminPanel.vue";
 import RequestResourceView from "@/views/RequestResourceView.vue";
+import EmployeesView from "@/views/EmployeesView.vue";
 
 const routes = [
   { path: "/", redirect: "/auth" },
@@ -13,6 +14,7 @@ const routes = [
   { path: "/dashboard", component: DashboardView, meta: { requiresAuth: true } },
   { path: "/expenses", component: ExpenseView, meta: { requiresAuth: true } },
   { path: "/resources", component: RequestResourceView, meta: { requiresAuth: true } },
+  { path: "/employees", component: EmployeesView, meta: { requiresAuth: true } },
 
   // ✅ Role-Based Routes
   { path: "/admin", component: AdminPanel, meta: { requiresAuth: true, role: "Admin" } },

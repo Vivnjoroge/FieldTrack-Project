@@ -1,14 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
+const verifyToken = require("../middleware/auth"); // Import your authentication middleware
 
-// GET all employees
-router.get("/", (req, res) => {
-    db.query("SELECT Employee_ID, Name, Department, Email FROM Employee", (err, results) => {
-        if (err) return res.status(500).json({ message: "Error fetching employees" });
+// GET all employees (manager only)
+router.get("/", verifyToken, (req, res) => {
+    if (req.user.role !== "Manager") {
+        return res.status(403).json({ message: "Access denied. Managers only." });
+    }
+
+    db.query("SELECT Employee_ID, Name, Department, Email, Role FROM Employee", (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Error fetching employees" });
+        }
         res.json(results);
     });
 });
+
 // POST route to create a new employee
 router.post("/", (req, res) => {
     const { name, position, department } = req.body; // Assuming you're sending data like this
@@ -22,6 +31,5 @@ router.post("/", (req, res) => {
         res.status(201).json({ message: "Employee created successfully", employeeId: results.insertId });
     });
 });
-
 
 module.exports = router;

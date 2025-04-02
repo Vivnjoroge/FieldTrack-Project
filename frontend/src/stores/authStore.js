@@ -30,6 +30,7 @@ export const useAuthStore = defineStore("auth", {
 
         async login(credentials) {
             try {
+                console.log("Token before login:", localStorage.getItem("token")); // Log token before login
                 const response = await fetch("http://localhost:5000/api/auth/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -41,15 +42,15 @@ export const useAuthStore = defineStore("auth", {
 
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("role", data.role);
-                localStorage.setItem("department", data.department); // Add this line
+                localStorage.setItem("department", data.department);
                 this.token = data.token;
-                this.user = data.user; // Store user info
+                this.user = data.user;
 
                 return {
                     success: true,
                     role: data.role,
                     token: data.token,
-                    department: data.department, // Add this line
+                    department: data.department,
                 };
             } catch (error) {
                 return { success: false, message: error.message };
@@ -59,7 +60,7 @@ export const useAuthStore = defineStore("auth", {
         logout() {
             localStorage.removeItem("token");
             localStorage.removeItem("role");
-            localStorage.removeItem("department"); //clear department from local storage.
+            localStorage.removeItem("department");
             this.token = "";
             this.user = null;
         },

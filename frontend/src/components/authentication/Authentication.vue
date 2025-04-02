@@ -21,12 +21,18 @@ const showSaveCredentialsPrompt = ref(false);
 
 // Function to determine role based on department
 const getRole = (dept) => {
-  if (!dept) return "Employee";
-  const lowerDept = dept.trim().toLowerCase();
-  if (lowerDept === "finance") return "Finance";
-  if (lowerDept === "management") return "Manager";
-  if (lowerDept === "admin") return "Admin";
-  return "Employee";
+    if (!dept) {
+        console.log("Department is empty or null.");
+        return "Employee";
+    }
+    const lowerDept = dept.trim().toLowerCase();
+    console.log("Original Department:", dept);
+    console.log("Lowercase Department:", lowerDept);
+    if (lowerDept === "finance") return "Finance";
+    if (lowerDept === "management") return "Manager";
+    if (lowerDept === "admin") return "Admin";
+    console.log("Department does not match any known roles.");
+    return "Employee";
 };
 
 // Handle Login or Register
@@ -38,10 +44,14 @@ const handleAuth = async () => {
     try {
         let response;
         if (isRegister.value) {
-            const assignedRole = getRole(department.value.trim());
+            const trimmedDept = department.value.trim();
+            const assignedRole = getRole(trimmedDept);
+
+            console.log("Assigned Role:", assignedRole);
+
             response = await authStore.register({
                 name: name.value,
-                department: department.value,
+                department: trimmedDept,
                 email: email.value,
                 password: password.value,
                 role: assignedRole,
@@ -51,6 +61,7 @@ const handleAuth = async () => {
                 showSaveCredentialsPrompt.value = true;
             }
         } else {
+            console.log("Token from localStorage before login:", localStorage.getItem('token')); //log token before login
             response = await authStore.login({
                 email: email.value,
                 password: password.value,
@@ -58,15 +69,13 @@ const handleAuth = async () => {
         }
 
         if (response.success) {
+            console.log("Full Response from Backend:", response); // Log the full response
+            console.log("Response Role from Backend:", response.role);
+
             message.value = response.message;
             localStorage.setItem("role", response.role);
             localStorage.setItem("token", response.token);
-            localStorage.setItem("department", response.department); // Set the department in localStorage
-
-            // Show prompt for saving credentials on first login
-            if (!isRegister.value) {
-                showSaveCredentialsPrompt.value = true;
-            }
+            localStorage.setItem("department", response.department);
 
             redirectUser(response.role);
         } else {
@@ -80,73 +89,72 @@ const handleAuth = async () => {
     }
 };
 
-// ✅ Corrected Role-Based Redirection
+// Corrected Role-Based Redirection
 const redirectUser = (role) => {
-  switch (role) {
-    case "Admin":
-      router.push("/admin");
-      break;
-    case "Finance":
-      router.push("/finance");
-      break;
-    case "Manager":
-      router.push("/manager");
-      break;
-    default:
-      router.push("/dashboard"); // Default Employee route
-  }
+    switch (role) {
+        case "Admin":
+            router.push("/admin");
+            break;
+        case "Finance":
+            router.push("/finance");
+            break;
+        case "Manager":
+            router.push("/manager");
+            break;
+        default:
+            router.push("/dashboard");
+    }
 };
 
-
-// ✅ Autofill Credentials on Login Page Only
+// Autofill Credentials on Login Page Only
 onMounted(() => {
-  const savedEmail = localStorage.getItem("email");
-  const savedPassword = localStorage.getItem("password");
+    const savedEmail = localStorage.getItem("email");
+    const savedPassword = localStorage.getItem("password");
 
-  if (!isRegister.value && savedEmail && savedPassword) {
-    email.value = savedEmail;
-    password.value = savedPassword;
-  }
+    if (!isRegister.value && savedEmail && savedPassword) {
+        email.value = savedEmail;
+        password.value = savedPassword;
+    }
 });
 
 // Watch for `isRegister` to clear email and password when switching between login and register forms
 watch(isRegister, (newValue) => {
-  if (newValue) {
-    email.value = "";
-    password.value = "";
-  } else {
-    const savedEmail = localStorage.getItem("email");
-    const savedPassword = localStorage.getItem("password");
-
-    if (savedEmail && savedPassword) {
-      email.value = savedEmail;
-      password.value = savedPassword;
+    if (newValue) {
+        email.value = "";
+        password.value = "";
     } else {
-      email.value = "";
-      password.value = "";
+        const savedEmail = localStorage.getItem("email");
+        const savedPassword = localStorage.getItem("password");
+
+        if (savedEmail && savedPassword) {
+            email.value = savedEmail;
+            password.value = savedPassword;
+        } else {
+            email.value = "";
+            password.value = "";
+        }
     }
-  }
 });
 
-// ✅ Save Credentials
+// Save Credentials
 const handleSaveCredentials = (choice) => {
-  if (choice === "yes") {
-    localStorage.setItem("email", email.value);
-    localStorage.setItem("password", password.value);
-  }
-  showSaveCredentialsPrompt.value = false;
+    if (choice === "yes") {
+        localStorage.setItem("email", email.value);
+        localStorage.setItem("password", password.value);
+    }
+    showSaveCredentialsPrompt.value = false;
 };
 
-// ✅ Logout and Clear Saved Credentials
+// Logout and Clear Saved Credentials
 const handleLogout = () => {
-  localStorage.removeItem("email");
-  localStorage.removeItem("password");
-  localStorage.removeItem("role");
-  localStorage.removeItem("token");
-  localStorage.removeItem("department"); // Clear department from localStorage
+    localStorage.removeItem("email");
+    localStorage.removeItem("password");
+    localStorage.removeItem("role");
+    localStorage.removeItem("token");
+    localStorage.removeItem("department");
 
-  email.value = "";
-  password.value = "";
+    email.value = "";
+    password.value = "";
 };
 </script>
 

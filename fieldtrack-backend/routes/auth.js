@@ -2,10 +2,10 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
-require("dotenv").config(); // Load environment variables
+require("dotenv").config();
 
 const router = express.Router();
-const SECRET_KEY = process.env.SECRET_KEY; // Ensure this is set in your .env file
+const SECRET_KEY = process.env.SECRET_KEY;
 
 // 🚀 Employee Registration (Supports Finance & Manager roles)
 router.post("/register", async (req, res) => {
@@ -15,8 +15,7 @@ router.post("/register", async (req, res) => {
         return res.status(400).json({ message: "All fields are required!" });
     }
 
-    // Assign role based on department (convert to lowercase)
-    let role = "Employee"; // Default role
+    let role = "Employee";
     const lowerDepartment = department.toLowerCase();
     if (lowerDepartment === "finance") {
         role = "Finance";
@@ -33,17 +32,17 @@ router.post("/register", async (req, res) => {
 
         db.query(
             "INSERT INTO Employee (Name, Department, Email, Password, Role) VALUES (?, ?, ?, ?, ?)",
-            [name, lowerDepartment, email, hashedPassword, role], // store lowercased department
+            [name, lowerDepartment, email, hashedPassword, role],
             (err, result) => {
                 if (err) return res.status(500).json({ message: "Error registering user" });
 
-                res.json({ success: true, message: "User registered successfully!", role });
+                console.log("Register Role (Before Response):", role); // Added logging
+                res.json({ success: true, message: "User registered successfully!", role: role }); // Corrected line
             }
         );
     });
 });
 
-// 🚀 Employee Login (With JWT Token)
 // 🚀 Employee Login (With JWT Token)
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -62,19 +61,19 @@ router.post("/login", async (req, res) => {
         const match = await bcrypt.compare(password, user.Password);
         if (!match) return res.status(401).json({ message: "Invalid email or password!" });
 
-        // Generate JWT Token
         const token = jwt.sign(
-            { id: user.Employee_ID, role: user.Role, department: user.Department }, // Payload - corrected
+            { id: user.Employee_ID, role: user.Role, department: user.Department },
             SECRET_KEY,
-            { expiresIn: "1h" } // Token expires in 1 hour
+            { expiresIn: "1h" }
         );
 
+        console.log("Login Role (Before Response):", user.Role); // Added logging
         res.json({
             success: true,
             message: "Login successful!",
-            token, // Send token to frontend
+            token,
             role: user.Role,
-            department: user.Department.toLowerCase() // send lowercased department
+            department: user.Department.toLowerCase()
         });
     });
 });
