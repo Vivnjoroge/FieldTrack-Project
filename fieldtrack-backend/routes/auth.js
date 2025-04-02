@@ -15,11 +15,12 @@ router.post("/register", async (req, res) => {
         return res.status(400).json({ message: "All fields are required!" });
     }
 
-    // Assign role based on department
+    // Assign role based on department (convert to lowercase)
     let role = "Employee"; // Default role
-    if (department.toLowerCase() === "finance") {
+    const lowerDepartment = department.toLowerCase();
+    if (lowerDepartment === "finance") {
         role = "Finance";
-    } else if (department.toLowerCase() === "management") {
+    } else if (lowerDepartment === "management") {
         role = "Manager";
     }
 
@@ -32,7 +33,7 @@ router.post("/register", async (req, res) => {
 
         db.query(
             "INSERT INTO Employee (Name, Department, Email, Password, Role) VALUES (?, ?, ?, ?, ?)",
-            [name, department, email, hashedPassword, role],
+            [name, lowerDepartment, email, hashedPassword, role], // store lowercased department
             (err, result) => {
                 if (err) return res.status(500).json({ message: "Error registering user" });
 
@@ -72,7 +73,7 @@ router.post("/login", async (req, res) => {
             message: "Login successful!",
             token, // Send token to frontend
             role: user.Role,
-            department: user.Department
+            department: user.Department.toLowerCase() // send lowercased department
         });
     });
 });

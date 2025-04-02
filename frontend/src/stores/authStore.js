@@ -1,3 +1,4 @@
+// authStore.js
 import { defineStore } from "pinia";
 
 export const useAuthStore = defineStore("auth", {
@@ -40,10 +41,16 @@ export const useAuthStore = defineStore("auth", {
 
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("role", data.role);
+                localStorage.setItem("department", data.department); // Add this line
                 this.token = data.token;
                 this.user = data.user; // Store user info
 
-                return { success: true, role: data.role, token: data.token };
+                return {
+                    success: true,
+                    role: data.role,
+                    token: data.token,
+                    department: data.department, // Add this line
+                };
             } catch (error) {
                 return { success: false, message: error.message };
             }
@@ -52,6 +59,7 @@ export const useAuthStore = defineStore("auth", {
         logout() {
             localStorage.removeItem("token");
             localStorage.removeItem("role");
+            localStorage.removeItem("department"); //clear department from local storage.
             this.token = "";
             this.user = null;
         },

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "vue-router";
 
@@ -8,101 +8,141 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 // Form State
-const name = ref(""); 
-const department = ref(""); 
-const email = ref(""); 
-const password = ref(""); 
-const message = ref(""); 
-const error = ref(""); 
-const loading = ref(false); 
-const showPassword = ref(false); 
-const isRegister = ref(false); 
+const name = ref("");
+const department = ref("");
+const email = ref("");
+const password = ref("");
+const message = ref("");
+const error = ref("");
+const loading = ref(false);
+const showPassword = ref(false);
+const isRegister = ref(false);
+const showSaveCredentialsPrompt = ref(false);
 
 // Function to determine role based on department
 const getRole = (dept) => {
-  if (!dept) return "Employee"; 
+  if (!dept) return "Employee";
   const lowerDept = dept.trim().toLowerCase();
   if (lowerDept === "finance") return "Finance";
   if (lowerDept === "management") return "Manager";
   if (lowerDept === "admin") return "Admin";
-  return "Employee"; 
+  return "Employee";
 };
 
 // Handle Login or Register
 const handleAuth = async () => {
-  message.value = "";
-  error.value = "";
-  loading.value = true;
+    message.value = "";
+    error.value = "";
+    loading.value = true;
 
-  try {
-    let response;
-    if (isRegister.value) {
-      console.log("Department value before getRole:", department.value);
-      
-      const assignedRole = getRole(department.value.trim());
-      console.log("Assigned Role:", assignedRole); 
+    try {
+        let response;
+        if (isRegister.value) {
+            const assignedRole = getRole(department.value.trim());
+            response = await authStore.register({
+                name: name.value,
+                department: department.value,
+                email: email.value,
+                password: password.value,
+                role: assignedRole,
+            });
 
-      response = await authStore.register({
-        name: name.value,
-        department: department.value,
-        email: email.value,
-        password: password.value,
-        role: assignedRole,
-      });
-    } else {
-      response = await authStore.login({
-        email: email.value,
-        password: password.value,
-      });
+            if (response.success) {
+                showSaveCredentialsPrompt.value = true;
+            }
+        } else {
+            response = await authStore.login({
+                email: email.value,
+                password: password.value,
+            });
+        }
+
+        if (response.success) {
+            message.value = response.message;
+            localStorage.setItem("role", response.role);
+            localStorage.setItem("token", response.token);
+            localStorage.setItem("department", response.department); // Set the department in localStorage
+
+            // Show prompt for saving credentials on first login
+            if (!isRegister.value) {
+                showSaveCredentialsPrompt.value = true;
+            }
+
+            redirectUser(response.role);
+        } else {
+            error.value = response.message;
+        }
+    } catch (err) {
+        error.value = "An unexpected error occurred.";
+        console.error(err);
+    } finally {
+        loading.value = false;
     }
-
-    if (response.success) {
-      message.value = response.message;
-      localStorage.setItem("role", response.role);
-      localStorage.setItem("token", response.token);
-
-      console.log("Stored Role:", localStorage.getItem("role"));
-
-      // Redirect user based on role
-      redirectUser(response.role);
-    } else {
-      error.value = response.message;
-    }
-  } catch (err) {
-    error.value = "An unexpected error occurred.";
-    console.error(err);
-  } finally {
-    loading.value = false;
-  }
 };
 
 // ✅ Corrected Role-Based Redirection
 const redirectUser = (role) => {
-  console.log("Redirecting user based on role:", role);
-  
   switch (role) {
     case "Finance":
-      router.push("/dashboard");
-      break;
     case "Manager":
-      router.push("/dashboard");
-      break;
     case "Admin":
       router.push("/dashboard");
       break;
     default:
-      router.push("/dashboard"); // Default for Employees
+      router.push("/dashboard");
   }
 };
 
-// ✅ Auto-Redirect if Already Logged In
+// ✅ Autofill Credentials on Login Page Only
 onMounted(() => {
-  const savedRole = localStorage.getItem("role");
-  if (savedRole) {
-    console.log("Auto-redirecting based on stored role:", savedRole);
-    redirectUser(savedRole);
+  const savedEmail = localStorage.getItem("email");
+  const savedPassword = localStorage.getItem("password");
+
+  if (!isRegister.value && savedEmail && savedPassword) {
+    email.value = savedEmail;
+    password.value = savedPassword;
   }
 });
+
+// Watch for `isRegister` to clear email and password when switching between login and register forms
+watch(isRegister, (newValue) => {
+  if (newValue) {
+    email.value = "";
+    password.value = "";
+  } else {
+    const savedEmail = localStorage.getItem("email");
+    const savedPassword = localStorage.getItem("password");
+
+    if (savedEmail && savedPassword) {
+      email.value = savedEmail;
+      password.value = savedPassword;
+    } else {
+      email.value = "";
+      password.value = "";
+    }
+  }
+});
+
+// ✅ Save Credentials
+const handleSaveCredentials = (choice) => {
+  if (choice === "yes") {
+    localStorage.setItem("email", email.value);
+    localStorage.setItem("password", password.value);
+  }
+  showSaveCredentialsPrompt.value = false;
+};
+
+// ✅ Logout and Clear Saved Credentials
+const handleLogout = () => {
+  localStorage.removeItem("email");
+  localStorage.removeItem("password");
+  localStorage.removeItem("role");
+  localStorage.removeItem("token");
+  localStorage.removeItem("department"); // Clear department from localStorage
+
+  email.value = "";
+  password.value = "";
+};
 </script>
 
 <template>
@@ -120,7 +160,20 @@ onMounted(() => {
 
       <!-- Right Section - Form -->
       <div class="w-full lg:w-3/5 flex items-center justify-center p-8">
-        <div class="max-w-md w-full bg-white p-8 shadow-lg rounded-md">
+        <div class="max-w-md w-full bg-white p-8 shadow-lg rounded-md relative">
+          <!-- Save Credentials Prompt -->
+          <div v-if="showSaveCredentialsPrompt" class="absolute top-0 left-0 right-0 bg-yellow-200 p-3 text-center text-yellow-700 rounded-md shadow-md z-10">
+            <p class="text-sm">Would you like to save your login credentials for easier login next time?</p>
+            <div class="flex justify-center gap-4 mt-2">
+              <button @click="handleSaveCredentials('yes')" class="btn-primary bg-green-500 hover:bg-green-600 text-white">
+                Yes, Save Credentials
+              </button>
+              <button @click="handleSaveCredentials('no')" class="btn-primary bg-red-500 hover:bg-red-600 text-white">
+                No, Thanks
+              </button>
+            </div>
+          </div>
+
           <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">
             Welcome to Field Management System
           </h2>
@@ -129,56 +182,37 @@ onMounted(() => {
             Please login or register to continue.
           </p>
 
-          <!-- Success & Error Messages -->
           <p v-if="message" class="text-green-600 text-center">{{ message }}</p>
           <p v-if="error" class="text-red-500 text-center">{{ error }}</p>
 
-          <!-- Form Inputs -->
           <div class="space-y-4">
-            <!-- Register Fields (Only Visible in Register Mode) -->
             <div v-if="isRegister" class="space-y-4">
-              <input v-model="name" type="text" placeholder="Full Name"
-                class="input-field" required />
-
-              <input v-model="department" type="text" placeholder="Department"
-                class="input-field" required />
+              <input v-model="name" type="text" placeholder="Full Name" class="input-field" required />
+              <input v-model="department" type="text" placeholder="Department" class="input-field" required />
             </div>
 
-            <!-- Common Fields for Login & Register -->
-            <input v-model="email" type="email" placeholder="Enter your work email"
-              class="input-field" required />
+            <input v-model="email" type="email" placeholder="Enter your work email" class="input-field" required />
+            <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Enter password" class="input-field" required />
 
-            <div class="relative">
-              <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Enter password"
-                class="input-field" required />
-              <button @click="showPassword = !showPassword" type="button"
-                class="absolute right-3 top-3 text-gray-500 focus:outline-none">
-                {{ showPassword ? '🙈' : '👁️' }}
-              </button>
-            </div>
-
-            <!-- Submit Button -->
-            <button @click="handleAuth" :disabled="loading"
-              class="btn-primary">
+            <button @click="handleAuth" :disabled="loading" class="btn-primary">
               {{ isRegister ? "Register" : "Login" }}
             </button>
 
-            <div class="flex justify-between items-center text-sm mt-4">
-              <a href="#" class="text-blue-600 hover:underline">Forgot password?</a>
-              <p>
-                {{ isRegister ? "Already have an account?" : "New to the system?" }}
-                <button @click="isRegister = !isRegister"
-                  class="text-blue-600 font-medium hover:underline">
-                  {{ isRegister ? "Login" : "Register" }}
-                </button>
-              </p>
-            </div>
+            <!-- Toggle between Login and Register -->
+            <p class="text-center text-sm text-gray-600 mt-2">
+              {{ isRegister ? "Already have an account?" : "Don't have an account?" }}
+              <button @click="isRegister = !isRegister" class="text-blue-500 underline">
+                {{ isRegister ? "Login" : "Register" }}
+              </button>
+            </p>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+
 
 <style scoped>
 /* General Layout */
