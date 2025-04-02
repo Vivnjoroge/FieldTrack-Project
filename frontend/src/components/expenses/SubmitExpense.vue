@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import axios from "axios";
 
+// Form state variables
 const amount = ref("");
 const description = ref("");
 const expense_type = ref("");
@@ -13,25 +14,10 @@ const expenses = ref([]);
 const showForm = ref(false); // Hide form initially
 const userDepartment = ref(""); // Store user department
 
-// Fetch User Department from API
-const fetchUserDepartment = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    const response = await axios.get("http://localhost:5000/api/user-department", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    userDepartment.value = response.data.department;
-
-    // Show form only if the user is NOT Admin, Finance, or Manager
-    if (!["Admin", "Finance", "Management"].includes(userDepartment.value)) {
-      showForm.value = true;
-    }
-  } catch (error) {
-    console.error("❌ Error Fetching Department:", error);
-  }
+// Get department from localStorage (set during login)
+const getUserDepartment = () => {
+  const department = localStorage.getItem("department"); // Get department from localStorage
+  return department || "Employee"; // Default to "Employee" if not found
 };
 
 // Fetch Expenses
@@ -52,6 +38,12 @@ const fetchExpenses = async () => {
 
 // Handle Form Submission (Only for Employees)
 const handleSubmit = async () => {
+  if (!showForm.value) {
+    message.value = "Only employees can submit expenses.";
+    messageClass.value = "text-red-600 bg-red-100";
+    return;
+  }
+
   loading.value = true;
   message.value = "";
 
@@ -97,83 +89,110 @@ const handleSubmit = async () => {
   }
 };
 
-// Fetch data on component mount
-onMounted(() => {
-  fetchUserDepartment();
-  fetchExpenses();
+// ✅ Ensure department is set before running fetchExpenses
+onMounted(async () => {
+  userDepartment.value = getUserDepartment(); // Get department from localStorage
+  showForm.value = userDepartment.value === "Employee"; // Show form only for employees
+  fetchExpenses(); // Fetch expenses after setting department
 });
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">
-      Expense Management
-    </h2>
+  
+  <div class="max-w-4xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-lg">
+    <h2 class="text-3xl font-bold text-gray-900 text-center mb-6">Expense Management</h2>
 
-    <!-- Expense Submission Form (Only for Employees NOT in Admin, Finance, or Management) -->
-    <form v-if="showForm" @submit.prevent="handleSubmit" class="space-y-4">
-      <div>
-        <label class="block text-gray-700 font-medium">Amount:</label>
-        <input type="number" v-model="amount" required class="w-full mt-1 px-4 py-2 border rounded-md" />
-      </div>
-
-      <div>
-        <label class="block text-gray-700 font-medium">Description:</label>
-        <input type="text" v-model="description" required class="w-full mt-1 px-4 py-2 border rounded-md" />
-      </div>
-
-      <div>
-        <label class="block text-gray-700 font-medium">Expense Type:</label>
-        <select v-model="expense_type" required class="w-full mt-1 px-4 py-2 border rounded-md">
-          <option value="" disabled>Select Expense Type</option>
-          <option value="Office Expenses">Office Expenses</option>
-          <option value="Travel">Travel</option>
-          <option value="Utilities">Utilities</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="block text-gray-700 font-medium">Upload Receipt:</label>
-        <input type="file" accept="image/*" @change="handleFileUpload" class="w-full mt-1 px-4 py-2 border rounded-md" />
-      </div>
-
-      <button type="submit" :disabled="loading" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md">
-        {{ loading ? "Submitting..." : "Submit Expense" }}
+    <!-- Toggle Button to Show/Hide Form -->
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-800">
+        {{ showForm ? "Submit an Expense" : "Your Submitted Expenses" }}
+      </h3>
+      <button
+        @click="showForm = !showForm"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+      >
+        {{ showForm ? "View Expenses" : "Submit Expense" }}
       </button>
-    </form>
+    </div>
+
+    <!-- Success/Error Message -->
+    <p v-if="message" :class="messageClass" class="mb-4 text-center">{{ message }}</p>
+
+    <!-- Expense Submission Form -->
+    <div v-if="showForm" class="bg-gray-100 p-6 rounded-lg mb-6 shadow-md">
+      <form @submit.prevent="handleSubmit" class="space-y-4">
+        <div>
+          <label class="block text-gray-700 font-medium">Amount:</label>
+          <input type="number" v-model="amount" required class="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium">Description:</label>
+          <input type="text" v-model="description" required class="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium">Expense Type:</label>
+          <select v-model="expense_type" required class="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400">
+            <option value="" disabled>Select Expense Type</option>
+            <option value="Office Expenses">Office Expenses</option>
+            <option value="Travel">Travel</option>
+            <option value="Utilities">Utilities</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium">Upload Receipt:</label>
+          <input type="file" accept="image/*" @change="handleFileUpload" class="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <button type="submit" :disabled="loading" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+          {{ loading ? "Submitting..." : "Submit Expense" }}
+        </button>
+      </form>
+    </div>
 
     <!-- Expense List -->
-    <h3 class="text-xl font-semibold my-4">Submitted Expenses</h3>
-    <table class="w-full border-collapse border border-gray-300">
-      <thead>
-        <tr class="bg-gray-200">
-          <th class="border px-4 py-2">Amount</th>
-          <th class="border px-4 py-2">Description</th>
-          <th class="border px-4 py-2">Type</th>
-          <th class="border px-4 py-2">Receipt</th>
-          <th class="border px-4 py-2">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="expense in expenses" :key="expense.Expense_ID" class="hover:bg-gray-100">
-          <td class="border px-4 py-2">{{ expense.Amount }}</td>
-          <td class="border px-4 py-2">{{ expense.Description }}</td>
-          <td class="border px-4 py-2">{{ expense.Expense_Type }}</td>
-          <td class="border px-4 py-2">
-            <img v-if="expense.Receipt" :src="'data:image/png;base64,' + expense.Receipt" class="w-10 h-10 rounded-md">
-            <span v-else>No Receipt</span>
-          </td>
-          <td class="border px-4 py-2">
-            <span :class="{
-              'text-green-600': expense.Status === 'Approved',
-              'text-red-600': expense.Status === 'Rejected',
-              'text-yellow-600': expense.Status === 'Pending'
+    <div v-if="!showForm" class="bg-gray-50 p-6 rounded-lg shadow-md">
+      <table class="w-full border-collapse bg-white shadow-sm rounded-lg">
+        <thead>
+          <tr class="bg-blue-100 text-gray-700">
+            <th class="border px-4 py-2">Amount</th>
+            <th class="border px-4 py-2">Description</th>
+            <th class="border px-4 py-2">Type</th>
+            <th class="border px-4 py-2">Receipt</th>
+            <th class="border px-4 py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="expense in expenses" :key="expense.Expense_ID" class="hover:bg-gray-100">
+            <td class="border px-4 py-2 font-semibold text-gray-900">Ksh {{ expense.Amount }}</td>
+            <td class="border px-4 py-2 text-gray-700">{{ expense.Description }}</td>
+            <td class="border px-4 py-2 text-gray-600">{{ expense.Expense_Type }}</td>
+            <td class="border px-4 py-2">
+              <img v-if="expense.Receipt" :src="'data:image/png;base64,' + expense.Receipt" class="w-10 h-10 rounded-md shadow-md">
+              <span v-else class="text-gray-500 italic">No Receipt</span>
+            </td>
+            <td class="p-3 border font-bold">
+              <span :class="{
+             'text-yellow-500': expense.Approval_Status === 'Pending',
+             'text-green-500': expense.Approval_Status === 'Approved',
+             'text-red-500': expense.Approval_Status === 'Rejected',
+              'text-blue-500': expense.Approval_Status === 'Submitted'
             }">
-              {{ expense.Status || 'Pending' }}
-            </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+                {{ expense.Approval_Status }}
+          </span>
+           </td>
+  
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </template>
+
+<style scoped>
+/* Custom styles (optional) */
+</style>

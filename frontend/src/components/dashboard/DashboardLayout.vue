@@ -5,6 +5,7 @@ import EmployeeSidebar from '@/components/sidebars/EmployeeSidebar.vue';
 import ManagerSidebar from '@/components/sidebars/ManagerSidebar.vue';
 import FinanceSidebar from '@/components/sidebars/FinanceSidebar.vue';
 import Navigation from '@/components/layouts/Navigation.vue';
+import AdminSidebar from '../sidebars/AdminSidebar.vue';
 
 // ✅ Fetch role from localStorage (or API) when component loads
 const userRole = ref(localStorage.getItem("role") || "Employee");
@@ -16,6 +17,8 @@ const SidebarComponent = computed(() => {
       return ManagerSidebar;
     case "Finance":
       return FinanceSidebar;
+    case "Admin" :
+      return AdminSidebar;
     default:
       return EmployeeSidebar;
   }

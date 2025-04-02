@@ -8,24 +8,24 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 // Form State
-const name = ref(""); // Only for Register
-const department = ref(""); // Only for Register
-const email = ref(""); // Used in both login & register
-const password = ref(""); // Used in both login & register
-const message = ref(""); // Success message
-const error = ref(""); // Error message
-const loading = ref(false); // Loading state
-const showPassword = ref(false); // Toggle password visibility
-const isRegister = ref(false); // Determines if user is logging in or registering
+const name = ref(""); 
+const department = ref(""); 
+const email = ref(""); 
+const password = ref(""); 
+const message = ref(""); 
+const error = ref(""); 
+const loading = ref(false); 
+const showPassword = ref(false); 
+const isRegister = ref(false); 
 
 // Function to determine role based on department
 const getRole = (dept) => {
-  if (!dept) return "Employee"; // Default role if no department is given
-  const lowerDept = dept.toLowerCase();
+  if (!dept) return "Employee"; 
+  const lowerDept = dept.trim().toLowerCase();
   if (lowerDept === "finance") return "Finance";
   if (lowerDept === "management") return "Manager";
   if (lowerDept === "admin") return "Admin";
-  return "Employee"; // Default role
+  return "Employee"; 
 };
 
 // Handle Login or Register
@@ -37,8 +37,10 @@ const handleAuth = async () => {
   try {
     let response;
     if (isRegister.value) {
-      // User Register (Assign Role)
-      const assignedRole = getRole(department.value);
+      console.log("Department value before getRole:", department.value);
+      
+      const assignedRole = getRole(department.value.trim());
+      console.log("Assigned Role:", assignedRole); 
 
       response = await authStore.register({
         name: name.value,
@@ -48,7 +50,6 @@ const handleAuth = async () => {
         role: assignedRole,
       });
     } else {
-      // User Login
       response = await authStore.login({
         email: email.value,
         password: password.value,
@@ -60,9 +61,9 @@ const handleAuth = async () => {
       localStorage.setItem("role", response.role);
       localStorage.setItem("token", response.token);
 
-      console.log("Stored Role:", localStorage.getItem("role")); // Debugging
+      console.log("Stored Role:", localStorage.getItem("role"));
 
-      // Redirect user
+      // Redirect user based on role
       redirectUser(response.role);
     } else {
       error.value = response.message;
@@ -75,15 +76,30 @@ const handleAuth = async () => {
   }
 };
 
-// Redirect user after login/register
+// ✅ Corrected Role-Based Redirection
 const redirectUser = (role) => {
-  router.push("/dashboard");
+  console.log("Redirecting user based on role:", role);
+  
+  switch (role) {
+    case "Finance":
+      router.push("/dashboard");
+      break;
+    case "Manager":
+      router.push("/dashboard");
+      break;
+    case "Admin":
+      router.push("/dashboard");
+      break;
+    default:
+      router.push("/dashboard"); // Default for Employees
+  }
 };
 
-// Auto-Redirect if Already Logged In
+// ✅ Auto-Redirect if Already Logged In
 onMounted(() => {
   const savedRole = localStorage.getItem("role");
   if (savedRole) {
+    console.log("Auto-redirecting based on stored role:", savedRole);
     redirectUser(savedRole);
   }
 });
