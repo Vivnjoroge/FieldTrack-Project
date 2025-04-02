@@ -83,15 +83,20 @@ const handleAuth = async () => {
 // ✅ Corrected Role-Based Redirection
 const redirectUser = (role) => {
   switch (role) {
-    case "Finance":
-    case "Manager":
     case "Admin":
-      router.push("/dashboard");
+      router.push("/admin");
+      break;
+    case "Finance":
+      router.push("/finance");
+      break;
+    case "Manager":
+      router.push("/manager");
       break;
     default:
-      router.push("/dashboard");
+      router.push("/dashboard"); // Default Employee route
   }
 };
+
 
 // ✅ Autofill Credentials on Login Page Only
 onMounted(() => {
@@ -221,7 +226,7 @@ const handleLogout = () => {
 }
 
 .left-section {
-  background-image: url('@/img/expense.jpg'); /* Ensure this is the correct path */
+  /* background-image: url('@/img/expense.jpg'); */ /* Ensure this is the correct path */
   background-size: cover;
   background-position: center;
   height: 100vh;

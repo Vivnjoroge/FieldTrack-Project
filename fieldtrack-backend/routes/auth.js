@@ -44,6 +44,7 @@ router.post("/register", async (req, res) => {
 });
 
 // 🚀 Employee Login (With JWT Token)
+// 🚀 Employee Login (With JWT Token)
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -63,7 +64,7 @@ router.post("/login", async (req, res) => {
 
         // Generate JWT Token
         const token = jwt.sign(
-            { id: user.ID, role: user.Role, department: user.Department }, // Payload
+            { id: user.Employee_ID, role: user.Role, department: user.Department }, // Payload - corrected
             SECRET_KEY,
             { expiresIn: "1h" } // Token expires in 1 hour
         );

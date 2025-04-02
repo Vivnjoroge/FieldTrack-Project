@@ -164,6 +164,7 @@ const closeModal = () => {
 
 // Delete expense
 const deleteExpense = async (expenseId) => {
+  console.log("Deleting Expense ID:", expenseId); 
   const token = localStorage.getItem("token");
   if (!token) return;
 
@@ -278,7 +279,7 @@ onMounted(async () => {
               }">
                 {{ expense.Approval_Status }}
               </span>
-              <div v-else-if="userDepartment === 'Finance'" class="flex space-x-2">
+              <div v-else-if="userDepartment.toLowerCase() === 'finance'" class="flex space-x-2">
                 <button @click="approveExpense(expense.Expense_ID)" class="group relative flex justify-center py-2 px-3 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200">
                   <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>

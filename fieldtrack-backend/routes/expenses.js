@@ -114,12 +114,20 @@ router.get("/", verifyToken, (req, res) => {
 
         if (!id) return res.status(401).json({ message: "User authentication failed!" });
 
-        let query = "SELECT * FROM Expense WHERE Employee_ID = ?";
-        let params = [id];
+        let query = `
+            SELECT
+                Expense.*,
+                Employee.Name AS Employee_Name
+            FROM
+                Expense
+            JOIN
+                Employee ON Expense.Employee_ID = Employee.Employee_ID
+        `;
+        let params = [];
 
-        if (role === "Finance") {
-            query = "SELECT * FROM Expense";
-            params = [];
+        if (role !== "Finance") {
+            query += " WHERE Expense.Employee_ID = ?";
+            params = [id];
         }
 
         console.log("🟢 Executing Query:", query);
@@ -131,20 +139,16 @@ router.get("/", verifyToken, (req, res) => {
                 return res.status(500).json({ message: "Error fetching expenses", error: err.message });
             }
 
-            const formattedResults = results.map(expense => ({
-                ...expense,
-                Receipt: expense.Receipt ? `data:image/png;base64,${expense.Receipt}` : null
-            }));
+            console.log("🟢 Query Results:", results);
 
-            console.log("🟢 Query Results:", formattedResults);
-            res.json(formattedResults);
+            // Ensure the response is in the correct format!
+            res.json(results); // Send just the expenses array
         });
     } catch (error) {
         console.error("❌ Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
-
 // ✅ 5. Get Expense by ID
 router.get("/:expenseId", verifyToken, (req, res) => {
     try {
