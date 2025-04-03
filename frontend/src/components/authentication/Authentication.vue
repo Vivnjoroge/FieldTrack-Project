@@ -3,11 +3,9 @@ import { ref, onMounted, watch } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "vue-router";
 
-// Initialize store and router
 const authStore = useAuthStore();
 const router = useRouter();
 
-// Form State
 const name = ref("");
 const department = ref("");
 const email = ref("");
@@ -19,7 +17,7 @@ const showPassword = ref(false);
 const isRegister = ref(false);
 const showSaveCredentialsPrompt = ref(false);
 
-// Function to determine role based on department
+// Determine Role based on Department
 const getRole = (dept) => {
     if (!dept) {
         console.log("Department is empty or null.");
@@ -47,6 +45,8 @@ const handleAuth = async () => {
             const trimmedDept = department.value.trim();
             const assignedRole = getRole(trimmedDept);
 
+            console.log("Original Department:", department.value);
+            console.log("Lowercase Department:", trimmedDept);
             console.log("Assigned Role:", assignedRole);
 
             response = await authStore.register({
@@ -54,30 +54,34 @@ const handleAuth = async () => {
                 department: trimmedDept,
                 email: email.value,
                 password: password.value,
-                role: assignedRole,
             });
 
+            console.log("Full Response from Backend:", response);
+            console.log("Response Role from Backend:", response.role);
+
             if (response.success) {
+                // ✅ Fix: Store role in localStorage
+                if (response.role) {
+                    localStorage.setItem("role", response.role);
+                }
                 showSaveCredentialsPrompt.value = true;
             }
         } else {
-            console.log("Token from localStorage before login:", localStorage.getItem('token')); //log token before login
             response = await authStore.login({
                 email: email.value,
                 password: password.value,
             });
+
+            if (response.success) {
+                console.log("Login Response Role:", response.role);
+                localStorage.setItem("role", response.role);
+                localStorage.setItem("department", response.department);
+            }
         }
 
         if (response.success) {
-            console.log("Full Response from Backend:", response); // Log the full response
-            console.log("Response Role from Backend:", response.role);
-
             message.value = response.message;
-            localStorage.setItem("role", response.role);
-            localStorage.setItem("token", response.token);
-            localStorage.setItem("department", response.department);
-
-            redirectUser(response.role);
+            redirectUser(response.role || "Employee"); // Default to Employee if undefined
         } else {
             error.value = response.message;
         }
@@ -89,7 +93,8 @@ const handleAuth = async () => {
     }
 };
 
-// Corrected Role-Based Redirection
+
+// Role-Based Redirection
 const redirectUser = (role) => {
     switch (role) {
         case "Admin":
@@ -106,7 +111,7 @@ const redirectUser = (role) => {
     }
 };
 
-// Autofill Credentials on Login Page Only
+// Autofill Credentials on Login Page
 onMounted(() => {
     const savedEmail = localStorage.getItem("email");
     const savedPassword = localStorage.getItem("password");
@@ -117,7 +122,7 @@ onMounted(() => {
     }
 });
 
-// Watch for `isRegister` to clear email and password when switching between login and register forms
+// Watch for `isRegister` to clear email/password
 watch(isRegister, (newValue) => {
     if (newValue) {
         email.value = "";
@@ -157,6 +162,7 @@ const handleLogout = () => {
     password.value = "";
 };
 </script>
+
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100">

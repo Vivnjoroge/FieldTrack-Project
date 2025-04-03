@@ -7,7 +7,18 @@ require("dotenv").config();
 const router = express.Router();
 const SECRET_KEY = process.env.SECRET_KEY;
 
-// 🚀 Employee Registration (Supports Finance & Manager roles)
+// Function to determine role
+const getRole = (department) => {
+    if (!department) return "Employee";
+    const lowerDept = department.toLowerCase();
+    if (lowerDept === "finance") return "Finance";
+    if (lowerDept === "management") return "Manager";
+    if (lowerDept === "admin") return "Admin";
+    return "Employee"; // Default role
+};
+
+// 🚀 Register Employee
+// 🚀 Register Employee
 router.post("/register", async (req, res) => {
     const { name, department, email, password } = req.body;
 
@@ -15,13 +26,7 @@ router.post("/register", async (req, res) => {
         return res.status(400).json({ message: "All fields are required!" });
     }
 
-    let role = "Employee";
-    const lowerDepartment = department.toLowerCase();
-    if (lowerDepartment === "finance") {
-        role = "Finance";
-    } else if (lowerDepartment === "management") {
-        role = "Manager";
-    }
+    const role = getRole(department); // Determine role based on department
 
     db.query("SELECT * FROM Employee WHERE Email = ?", [email], async (err, results) => {
         if (err) return res.status(500).json({ message: "Server error" });
@@ -32,18 +37,24 @@ router.post("/register", async (req, res) => {
 
         db.query(
             "INSERT INTO Employee (Name, Department, Email, Password, Role) VALUES (?, ?, ?, ?, ?)",
-            [name, lowerDepartment, email, hashedPassword, role],
+            [name, department, email, hashedPassword, role],
             (err, result) => {
                 if (err) return res.status(500).json({ message: "Error registering user" });
 
-                console.log("Register Role (Before Response):", role); // Added logging
-                res.json({ success: true, message: "User registered successfully!", role: role }); // Corrected line
+                console.log("🚀 Register Role (Before Response):", role);
+
+                // **✅ Fix: Return the role in the response**
+                res.json({
+                    success: true,
+                    message: "Registration successful! You can now log in.",
+                    role: role, // ✅ Now returning role correctly
+                });
             }
         );
     });
 });
 
-// 🚀 Employee Login (With JWT Token)
+// 🚀 Login User
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -67,18 +78,18 @@ router.post("/login", async (req, res) => {
             { expiresIn: "1h" }
         );
 
-        console.log("Login Role (Before Response):", user.Role); // Added logging
+        console.log("Login Role (Before Response):", user.Role);
         res.json({
             success: true,
             message: "Login successful!",
             token,
             role: user.Role,
-            department: user.Department.toLowerCase()
+            department: user.Department.toLowerCase(),
         });
     });
 });
 
-// 🚀 Logout (Optional: Clear Token on Frontend)
+// 🚀 Logout (Clears token on frontend)
 router.post("/logout", (req, res) => {
     res.json({ success: true, message: "Logged out successfully!" });
 });

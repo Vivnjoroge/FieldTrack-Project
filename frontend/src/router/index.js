@@ -34,24 +34,23 @@ router.beforeEach((to, from, next) => {
 
   // 🚫 Not Authenticated? Send to Login
   if (to.meta.requiresAuth && !token) {
-    return next("/auth");
+      return next("/auth");
   }
 
   // 🔒 Role-Based Access Control
   if (to.meta.role && to.meta.role !== role) {
-    return next("/dashboard"); // Redirect unauthorized users to a safe page
+      return next("/dashboard"); // Redirect unauthorized users to a safe page
   }
 
-  // 🔄 Prevent Authenticated Users from Reaching Login
+  // 🔄 Prevent Authenticated Users from Reaching Login (ONLY if on /auth)
   if (token && to.path === "/auth") {
-    if (role === "Admin") return next("/admin");
-    if (role === "Finance") return next("/finance");
-    if (role === "Manager") return next("/manager");
-    return next("/dashboard");
+      if (role === "Admin") return next("/admin");
+      if (role === "Finance") return next("/finance");
+      if (role === "Manager") return next("/manager");
+      return next("/dashboard");
   }
 
   next(); // ✅ Allow navigation if all checks pass
 });
-
 export default router;
 
