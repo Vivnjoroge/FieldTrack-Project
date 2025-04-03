@@ -26,8 +26,8 @@ const getUserDepartment = () => {
 
 // Computed property to show form
 const showForm = computed(() => {
-    const allowedDepartments = ["employee", "it", "sales", "business", "survey", "gis", "hr"];
-    return allowedDepartments.includes(userDepartment.value.toLowerCase());
+  const allowedDepartments = ["employee", "it", "sales", "business", "survey", "gis", "hr"]; // Exclude "management"
+  return allowedDepartments.includes(userDepartment.value.toLowerCase());
 });
 
 // Fetch Expenses
@@ -249,6 +249,9 @@ onMounted(async () => {
           {{ loading ? 'Submitting...' : 'Submit' }}
         </button>
       </form>
+    </div>
+    <div v-else>
+      <p class="text-gray-500 italic">Expense submission is not allowed for your department.</p>
     </div>
 
     <div class="bg-gray-50 p-6 rounded-lg shadow-md">

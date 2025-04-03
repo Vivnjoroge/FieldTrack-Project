@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
-const verifyToken = require("../middleware/auth"); // Import your authentication middleware
+const verifyToken = require("../middleware/auth"); // Import authentication middleware
 
-// GET all employees (manager only)
+// GET all employees (Manager only)
 router.get("/", verifyToken, (req, res) => {
     if (req.user.role !== "Manager") {
         return res.status(403).json({ message: "Access denied. Managers only." });
@@ -18,17 +18,65 @@ router.get("/", verifyToken, (req, res) => {
     });
 });
 
-// POST route to create a new employee
-router.post("/", (req, res) => {
-    const { name, position, department } = req.body; // Assuming you're sending data like this
-    const query = "INSERT INTO Employee (name, position, department) VALUES (?, ?, ?)";
+// POST - Create a new employee
+router.post("/", verifyToken, (req, res) => {
+    if (req.user.role !== "Manager") {
+        return res.status(403).json({ message: "Access denied. Managers only." });
+    }
 
-    db.query(query, [name, position, department], (err, results) => {
+    const { Name, Department, Email, Role } = req.body;
+    const query = "INSERT INTO Employee (Name, Department, Email, Role) VALUES (?, ?, ?, ?)";
+
+    db.query(query, [Name, Department, Email, Role], (err, results) => {
         if (err) {
-            console.error("Database error:", err); // Log the error to the console
-            return res.status(500).json({ error: err.message });
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Error creating employee" });
         }
         res.status(201).json({ message: "Employee created successfully", employeeId: results.insertId });
+    });
+});
+
+// PUT - Edit an existing employee
+router.put("/:id", verifyToken, (req, res) => {
+    if (req.user.role !== "Manager") {
+        return res.status(403).json({ message: "Access denied. Managers only." });
+    }
+
+    const { Name, Department, Email, Role } = req.body;
+    const employeeId = req.params.id;
+
+    const query = "UPDATE Employee SET Name = ?, Department = ?, Email = ?, Role = ? WHERE Employee_ID = ?";
+    
+    db.query(query, [Name, Department, Email, Role, employeeId], (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Error updating employee" });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+        res.json({ message: "Employee updated successfully" });
+    });
+});
+
+// DELETE - Remove an employee
+router.delete("/:id", verifyToken, (req, res) => {
+    if (req.user.role !== "Manager") {
+        return res.status(403).json({ message: "Access denied. Managers only." });
+    }
+
+    const employeeId = req.params.id;
+    const query = "DELETE FROM Employee WHERE Employee_ID = ?";
+
+    db.query(query, [employeeId], (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Error deleting employee" });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+        res.json({ message: "Employee deleted successfully" });
     });
 });
 

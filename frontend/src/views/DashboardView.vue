@@ -24,12 +24,12 @@ const selectedPanel = computed(() => panels[userRole.value] || panels.Employee);
 
 <template>
   <DashboardLayout>
-    <!-- Dashboard content inside Layout -->
     <h1 class="text-2xl font-bold my-6">Dashboard</h1>
     <div class="w-full max-w-6xl">
       <component :is="selectedPanel" />
     </div>
   </DashboardLayout>
 </template>
+
 
 

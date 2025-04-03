@@ -108,6 +108,7 @@ router.put("/reject/:expenseId", verifyToken, (req, res) => {
 });
 
 // ✅ 4. Get Expenses (Employees see their own, Finance sees all)
+// ✅ 4. Get Expenses (Employees see their own, Finance and Management see all)
 router.get("/", verifyToken, (req, res) => {
     try {
         const { id, role } = req.user;
@@ -125,7 +126,7 @@ router.get("/", verifyToken, (req, res) => {
         `;
         let params = [];
 
-        if (role !== "Finance") {
+        if (role !== "Finance" && role !== "Management") { // Add "Management" check here
             query += " WHERE Expense.Employee_ID = ?";
             params = [id];
         }

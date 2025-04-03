@@ -2,9 +2,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import AuthenticationView from "@/views/AuthenticationView.vue";
 import DashboardView from "@/views/DashboardView.vue";
 import ExpenseView from "@/views/ExpenseView.vue";
-import FinancePanel from "@/components/dashboard/FinancePanel.vue";
-import ManagerPanel from "@/components/dashboard/ManagerPanel.vue";
-import AdminPanel from "@/components/dashboard/AdminPanel.vue";
 import RequestResourceView from "@/views/RequestResourceView.vue";
 import EmployeesView from "@/views/EmployeesView.vue";
 
@@ -15,11 +12,6 @@ const routes = [
   { path: "/expenses", component: ExpenseView, meta: { requiresAuth: true } },
   { path: "/resources", component: RequestResourceView, meta: { requiresAuth: true } },
   { path: "/employees", component: EmployeesView, meta: { requiresAuth: true } },
-
-  // ✅ Role-Based Routes
-  { path: "/admin", component: AdminPanel, meta: { requiresAuth: true, role: "Admin" } },
-  { path: "/finance", component: FinancePanel, meta: { requiresAuth: true, role: "Finance" } },
-  { path: "/manager", component: ManagerPanel, meta: { requiresAuth: true, role: "Manager" } },
 ];
 
 const router = createRouter({
@@ -27,30 +19,22 @@ const router = createRouter({
   routes,
 });
 
-// 🛑 **Fixed Navigation Guard**
+// ✅ Updated Navigation Guard
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  // 🚫 Not Authenticated? Send to Login
+  // 🚫 Redirect unauthenticated users to login
   if (to.meta.requiresAuth && !token) {
-      return next("/auth");
+    return next("/auth");
   }
 
-  // 🔒 Role-Based Access Control
-  if (to.meta.role && to.meta.role !== role) {
-      return next("/dashboard"); // Redirect unauthorized users to a safe page
-  }
-
-  // 🔄 Prevent Authenticated Users from Reaching Login (ONLY if on /auth)
+  // 🔄 Prevent authenticated users from accessing /auth again
   if (token && to.path === "/auth") {
-      if (role === "Admin") return next("/admin");
-      if (role === "Finance") return next("/finance");
-      if (role === "Manager") return next("/manager");
-      return next("/dashboard");
+    return next("/dashboard");
   }
 
-  next(); // ✅ Allow navigation if all checks pass
+  next(); // ✅ Allow navigation
 });
-export default router;
 
+export default router;

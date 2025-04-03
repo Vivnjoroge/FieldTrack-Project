@@ -96,21 +96,8 @@ const handleAuth = async () => {
 
 // Role-Based Redirection
 const redirectUser = (role) => {
-    switch (role) {
-        case "Admin":
-            router.push("/admin");
-            break;
-        case "Finance":
-            router.push("/finance");
-            break;
-        case "Manager":
-            router.push("/manager");
-            break;
-        default:
-            router.push("/dashboard");
-    }
+    router.push("/dashboard"); // Always redirect to /dashboard
 };
-
 // Autofill Credentials on Login Page
 onMounted(() => {
     const savedEmail = localStorage.getItem("email");
