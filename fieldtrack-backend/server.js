@@ -3,7 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-const mysql = require("mysql2");
 const path = require("path");
 const fs = require("fs");
 const db = require("./config/db");
@@ -15,6 +14,7 @@ const expenses = require("./routes/expenses");
 const resources = require("./routes/resources");
 const approvals = require("./routes/approvals");
 const profile = require("./routes/profile");
+const reports = require("./routes/reports");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,12 +29,12 @@ app.get("/", (req, res) => {
 
 // Use Routes
 app.use("/api/auth", auth);
-console.log("✅ auth.js loaded");
 app.use("/api/employees", employees);
 app.use("/api/expenses", expenses);
 app.use("/api/resources", resources);
 app.use("/api/approvals", approvals);
 app.use("/api/profile", profile);
+app.use("/api/reports", reports);
 
 // Ensure 'uploads' directory exists
 const uploadDir = path.join(__dirname, "uploads");
@@ -57,7 +57,7 @@ const upload = multer({ storage });
 // API to Upload Receipt
 app.post("/api/expenses/upload-receipt", upload.single("receipt"), (req, res) => {
     if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" });
+        return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
     const { expenseId } = req.body;
@@ -65,9 +65,9 @@ app.post("/api/expenses/upload-receipt", upload.single("receipt"), (req, res) =>
 
     const sql = "UPDATE Expense SET Receipt = ? WHERE id = ?";
     db.query(sql, [receiptPath, expenseId], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) return res.status(500).json({ success: false, message: err.message });
 
-        res.json({ message: "Receipt uploaded successfully", path: receiptPath });
+        res.json({ success: true, message: "Receipt uploaded successfully", path: receiptPath });
     });
 });
 
@@ -77,11 +77,11 @@ app.get("/api/expenses/receipt/:id", (req, res) => {
     const sql = "SELECT Receipt FROM Expense WHERE id = ?";
     
     db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (result.length === 0) return res.status(404).json({ error: "Receipt not found" });
+        if (err) return res.status(500).json({ success: false, message: err.message });
+        if (result.length === 0) return res.status(404).json({ success: false, message: "Receipt not found" });
 
         const receiptPath = result[0].Receipt;
-        res.sendFile(path.resolve(receiptPath));
+        res.sendFile(path.join(__dirname, receiptPath)); // Use path.join for security
     });
 });
 

@@ -217,116 +217,128 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-lg">
-    <h2 class="text-3xl font-bold text-gray-900 text-center mb-6">Expense Management</h2>
+  <div class="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-2xl rounded-xl border border-gray-100">
+    <h2 class="text-4xl font-extrabold text-gray-800 text-center mb-8">Expense Management</h2>
 
-    <div>User Department: {{ userDepartment }}</div>
-    <div>Show Form: {{ showForm }}</div>
+    <!-- <div class="mb-4 text-sm text-gray-600">
+      <p><span class="font-semibold">User Department:</span> {{ userDepartment }}</p>
+      <p><span class="font-semibold">Show Form:</span> {{ showForm }}</p>
+    </div>
+ -->
+    <div v-if="showForm" class="mb-10 p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+      <h3 class="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">Submit Expense</h3>
 
-    <div v-if="showForm" class="mb-6">
-      <h3 class="text-xl font-semibold mb-4">Submit Expense</h3>
       <div v-if="message" :class="`p-3 rounded-md mb-4 ${messageClass}`">
         {{ message }}
       </div>
-      <form @submit.prevent="handleSubmit">
-        <div class="mb-4">
-          <label for="amount" class="block text-gray-700 text-sm font-bold mb-2">Amount</label>
-          <input v-model="amount" id="amount" type="number" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Amount" required>
+
+      <form @submit.prevent="handleSubmit" class="space-y-6">
+        <div>
+          <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+          <input v-model="amount" id="amount" type="number" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter amount" required>
         </div>
-        <div class="mb-4">
-          <label for="description" class="block text-gray-700 text-sm font-bold mb-2">Description</label>
-          <textarea v-model="description" id="description" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Description" required></textarea>
+
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea v-model="description" id="description" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter description" required></textarea>
         </div>
-        <div class="mb-4">
-          <label for="expense_type" class="block text-gray-700 text-sm font-bold mb-2">Expense Type</label>
-          <input v-model="expense_type" id="expense_type" type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Expense Type" required>
+
+        <div>
+          <label for="expense_type" class="block text-sm font-medium text-gray-700 mb-1">Expense Type</label>
+          <input v-model="expense_type" id="expense_type" type="text" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter expense type" required>
         </div>
-        <div class="mb-4">
-          <label for="receipt" class="block text-gray-700 text-sm font-bold mb-2">Receipt (Base64)</label>
-          <input type="file" @change="(event) => receipt = event.target.files[0]" id="receipt" accept="image/*" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+
+        <div>
+          <label for="receipt" class="block text-sm font-medium text-gray-700 mb-1">Receipt (Image)</label>
+          <input type="file" @change="(event) => receipt = event.target.files[0]" id="receipt" accept="image/*" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500">
         </div>
-        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" :disabled="loading">
+
+        <button type="submit" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400" :disabled="loading">
           {{ loading ? 'Submitting...' : 'Submit' }}
         </button>
       </form>
     </div>
-    <div v-else>
-      <p class="text-gray-500 italic">Expense submission is not allowed for your department.</p>
+
+    <div v-else class="text-center text-gray-500 italic mb-8">
+      Expense submission is not allowed for your department.
     </div>
 
-    <div class="bg-gray-50 p-6 rounded-lg shadow-md">
-      <table class="w-full border-collapse bg-white shadow-sm rounded-lg">
+    <div class="overflow-x-auto bg-white p-4 rounded-xl shadow-md border border-gray-100">
+      <table class="w-full border-collapse text-left text-sm text-gray-700">
         <thead>
-          <tr class="bg-blue-100 text-gray-700">
+          <tr class="bg-blue-50 text-gray-800 text-sm uppercase tracking-wide">
             <th class="border px-4 py-2">Amount</th>
             <th class="border px-4 py-2">Description</th>
             <th class="border px-4 py-2">Type</th>
             <th class="border px-4 py-2">Receipt</th>
             <th class="border px-4 py-2">Status</th>
-            <th class="border px-4 py-2">Actions</th>
+            <th class="border px-4 py-2 text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="expense in expenses" :key="expense.Expense_ID" class="hover:bg-gray-100">
+          <tr v-for="expense in expenses" :key="expense.Expense_ID" class="hover:bg-gray-50">
             <td class="border px-4 py-2 font-semibold text-gray-900">Ksh {{ expense.Amount }}</td>
-            <td class="border px-4 py-2 text-gray-700">{{ expense.Description }}</td>
-            <td class="border px-4 py-2 text-gray-600">{{ expense.Expense_Type }}</td>
-            <td class="border px-4 py-2">
-              <img v-if="expense.Receipt" :src="'data:image/png;base64,' + expense.Receipt" class="w-10 h-10 rounded-md shadow-md cursor-pointer" @click="openModal(expense.Receipt)">
+            <td class="border px-4 py-2">{{ expense.Description }}</td>
+            <td class="border px-4 py-2">{{ expense.Expense_Type }}</td>
+            <td class="border px-4 py-2 text-center">
+              <img v-if="expense.Receipt" :src="'data:image/png;base64,' + expense.Receipt" class="w-12 h-12 rounded-md shadow cursor-zoom-in hover:scale-105 transition-transform duration-150 mx-auto" @click="openModal(expense.Receipt)">
               <span v-else class="text-gray-500 italic">No Receipt</span>
             </td>
-            <td class="p-3 border font-bold">
+            <td class="border px-4 py-2 font-semibold text-center">
               <span v-if="expense.Approval_Status !== 'Pending'" :class="{
-                'text-green-500': expense.Approval_Status === 'Approved',
-                'text-red-500': expense.Approval_Status === 'Rejected'
+                'text-green-600': expense.Approval_Status === 'Approved',
+                'text-red-600': expense.Approval_Status === 'Rejected'
               }">
                 {{ expense.Approval_Status }}
               </span>
-              <div v-else-if="userDepartment.toLowerCase() === 'finance'" class="flex space-x-2">
-                <button @click="approveExpense(expense.Expense_ID)" class="group relative flex justify-center py-2 px-3 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200">
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span>Approve</span>
+              <div v-else-if="userDepartment.toLowerCase() === 'finance'" class="flex justify-center space-x-2">
+                <button @click="approveExpense(expense.Expense_ID)" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-all">
+                  Approve
                 </button>
-                <button @click="rejectExpense(expense.Expense_ID)" class="group relative flex justify-center py-2 px-3 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200">
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                  <span>Reject</span>
+                <button @click="rejectExpense(expense.Expense_ID)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-all">
+                  Reject
                 </button>
               </div>
               <span v-else class="text-yellow-500">Pending</span>
             </td>
             <td class="border px-4 py-2 flex space-x-2 justify-center">
-              <button @click="editExpense(expense)" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-1 px-3 rounded-md text-sm transition-colors duration-200">Edit</button>
-              <button @click="deleteExpense(expense.Expense_ID)" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-md text-sm transition-colors duration-200">Delete</button>
+              <button @click="editExpense(expense)" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-1 px-3 rounded-md text-sm transition-colors">Edit</button>
+              <button @click="deleteExpense(expense.Expense_ID)" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-md text-sm transition-colors">Delete</button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div v-if="showModal" class="fixed z-10 inset-0 overflow-y-auto">
-      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
+
+    <!-- Modal -->
+    <div v-if="showModal" class="fixed z-50 inset-0 overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen px-4 py-12 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <img v-if="modalImageSrc" :src="modalImageSrc" class="w-full">
-            <div v-else>
-              <label for="editedAmount" class="block text-gray-700 text-sm font-bold mb-2">Amount</label>
-              <input v-model="editedAmount" id="editedAmount" type="number" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Amount">
-              <label for="editedDescription" class="block text-gray-700 text-sm font-bold mb-2">Description</label>
-              <textarea v-model="editedDescription" id="editedDescription" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Description"></textarea>
-              <label for="editedExpenseType" class="block text-gray-700 text-sm font-bold mb-2">Expense Type</label>
-              <input v-model="editedExpenseType" id="editedExpenseType" type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Expense Type">
-              <button @click="saveEditedExpense" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Save</button>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="p-6 space-y-4">
+            <img v-if="modalImageSrc" :src="modalImageSrc" class="w-full rounded-md shadow" />
+            <div v-else class="space-y-4">
+              <div>
+                <label for="editedAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <input v-model="editedAmount" id="editedAmount" type="number" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              <div>
+                <label for="editedDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea v-model="editedDescription" id="editedDescription" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500"></textarea>
+              </div>
+              <div>
+                <label for="editedExpenseType" class="block text-sm font-medium text-gray-700 mb-1">Expense Type</label>
+                <input v-model="editedExpenseType" id="editedExpenseType" type="text" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              <button @click="saveEditedExpense" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md">Save</button>
             </div>
           </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button @click="closeModal" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+
+          <div class="bg-gray-100 px-6 py-4 sm:flex sm:flex-row-reverse">
+            <button @click="closeModal" type="button" class="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-white font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-sm">
               Close
             </button>
           </div>

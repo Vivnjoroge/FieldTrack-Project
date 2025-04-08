@@ -187,120 +187,146 @@ onMounted(() => {
 
 
 <template>
-  <div class="max-w-3xl mx-auto bg-white shadow-md p-6 rounded-lg">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-bold text-gray-800">
+  <div class="max-w-4xl mx-auto bg-white shadow-xl p-8 rounded-xl mt-10">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-3xl font-bold text-gray-800">
         {{ showRequestForm ? "Request a Resource" : "Your Resource Requests" }}
       </h2>
       <button @click="showRequestForm = !showRequestForm"
-        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 shadow transition duration-300">
         {{ showRequestForm ? "View Requests" : "Request Resource" }}
       </button>
     </div>
 
-    <p v-if="message" :class="messageClass" class="mb-4 text-center">{{ message }}</p>
+    <!-- Message -->
+    <p v-if="message" :class="messageClass"
+      class="mb-4 text-center text-lg font-medium px-4 py-2 rounded-md border shadow-sm">
+      {{ message }}
+    </p>
 
-    <form v-if="showRequestForm" @submit.prevent="submitRequest" class="space-y-4">
+    <!-- Request Form -->
+    <form v-if="showRequestForm" @submit.prevent="submitRequest" class="space-y-5">
       <div>
-        <label class="block text-gray-700 font-medium">Resource Name:</label>
-        <input type="text" v-model="resourceName" required class="w-full p-2 border rounded"
+        <label class="block text-gray-700 font-semibold mb-1">Resource Name</label>
+        <input type="text" v-model="resourceName" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
           placeholder="Enter resource name" />
       </div>
 
       <div>
-        <label class="block text-gray-700 font-medium">Quantity:</label>
-        <input type="number" v-model="quantity" min="1" required class="w-full p-2 border rounded" />
+        <label class="block text-gray-700 font-semibold mb-1">Quantity</label>
+        <input type="number" v-model="quantity" min="1" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+          placeholder="Enter quantity" />
       </div>
 
       <div>
-        <label class="block text-gray-700 font-medium">Reason:</label>
-        <textarea v-model="reason" required class="w-full p-2 border rounded"
+        <label class="block text-gray-700 font-semibold mb-1">Reason</label>
+        <textarea v-model="reason" required rows="4"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
           placeholder="Explain why you need this resource"></textarea>
       </div>
 
       <button type="submit" :disabled="loading"
-        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-        <span v-if="loading">Loading...</span>
+        class="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 font-semibold transition duration-300 shadow">
+        <span v-if="loading">Submitting...</span>
         <span v-else>Submit Request</span>
       </button>
     </form>
 
-    <div v-if="!showRequestForm" class="overflow-x-auto">
+    <!-- Resource Requests Table -->
+    <div v-if="!showRequestForm" class="mt-6 overflow-x-auto">
       <p v-if="loading" class="text-blue-500 text-center">Loading requests...</p>
       <p v-if="!loading && resourceRequests.length === 0" class="text-gray-500 text-center">No resource requests found.</p>
 
-      <table v-if="resourceRequests.length > 0" class="min-w-full bg-white border border-gray-200 rounded-lg">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="p-3 border">Resource Name</th>
-            <th class="p-3 border">Quantity</th>
-            <th class="p-3 border">Reason</th>
-            <th class="p-3 border">Status</th>
-            <th class="p-3 border">Date Requested</th>
-            <th v-if="isManager" class="p-3 border">Actions</th>
-            <th v-if="!isManager" class="p-3 border">Manage</th>
+      <table v-if="resourceRequests.length > 0"
+        class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md">
+        <thead class="bg-gray-100 text-gray-800">
+          <tr>
+            <th class="p-3 border text-left">Resource Name</th>
+            <th class="p-3 border text-left">Quantity</th>
+            <th class="p-3 border text-left">Reason</th>
+            <th class="p-3 border text-center">Status</th>
+            <th class="p-3 border text-center">Date</th>
+            <th class="p-3 border text-center">{{ isManager ? "Actions" : "Manage" }}</th>
           </tr>
         </thead>
-        <tbody>
-          <tr v-for="request in resourceRequests" :key="request.Resource_ID" class="text-center">
+        <tbody class="text-gray-700">
+          <tr v-for="(request, index) in resourceRequests" :key="request.Resource_ID"
+            :class="{ 'bg-gray-50': index % 2 === 0 }" class="hover:bg-blue-50 transition">
             <td class="p-3 border">{{ request.Resource_Name }}</td>
             <td class="p-3 border">{{ request.Quantity }}</td>
             <td class="p-3 border">{{ request.Reason }}</td>
-            <td class="p-3 border font-bold" :class="{
+            <td class="p-3 border text-center font-bold" :class="{
               'text-yellow-500': request.Status === 'Pending',
               'text-green-500': request.Status === 'Approved',
               'text-red-500': request.Status === 'Rejected'
             }">
               {{ request.Status }}
             </td>
-            <td class="p-3 border">{{ new Date(request.Date_Requested).toLocaleDateString() }}</td>
-            <td v-if="isManager" class="p-3 border">
-              <button v-if="request.Status === 'Pending'" @click="approveRequest(request.Resource_ID)"
-                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded mr-2">Approve</button>
-              <button v-if="request.Status === 'Pending'" @click="rejectRequest(request.Resource_ID)"
-                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Reject</button>
-            </td>
-            <td v-if="!isManager" class="p-3 border flex justify-center space-x-2">
-              <button @click="showEditModal(request.Resource_ID)" title="Edit"
-                class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15.586 9 16.414 7.586 13.586 10.414 10.757z" />
-                </svg>
-              </button>
-              <button @click="deleteRequest(request.Resource_ID)" title="Delete"
-                class="bg-red-500 hover:bg-red-600 text-white p-2 rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+            <td class="p-3 border text-center">{{ new Date(request.Date_Requested).toLocaleDateString() }}</td>
+            <td class="p-3 border text-center">
+              <!-- Manager Actions -->
+              <div v-if="isManager">
+                <button v-if="request.Status === 'Pending'" @click="approveRequest(request.Resource_ID)"
+                  class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded mr-2 text-sm shadow">
+                  Approve
+                </button>
+                <button v-if="request.Status === 'Pending'" @click="rejectRequest(request.Resource_ID)"
+                  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm shadow">
+                  Reject
+                </button>
+              </div>
+
+              <!-- User Actions -->
+              <div v-else class="flex justify-center space-x-3">
+                <button @click="showEditModal(request.Resource_ID)" title="Edit"
+                  class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded shadow transition duration-200">
+                  ✏️
+                </button>
+                <button @click="deleteRequest(request.Resource_ID)" title="Delete"
+                  class="bg-red-500 hover:bg-red-600 text-white p-2 rounded shadow transition duration-200">
+                  🗑️
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 class="text-lg font-semibold mb-4">Edit Resource Request</h2>
-        <div>
-          <label class="block text-gray-700 font-medium">Resource Name:</label>
-          <input type="text" v-model="editResourceName" required class="w-full p-2 border rounded" />
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium">Quantity:</label>
-          <input type="number" v-model="editQuantity" min="1" required class="w-full p-2 border rounded" />
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium">Reason:</label>
-          <textarea v-model="editReason" required class="w-full p-2 border rounded"></textarea>
-        </div>
-        <div class="mt-4 flex justify-end">
-          <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded mr-2" @click="showModal = false">Cancel</button>
-          <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" @click="updateRequest">Save Changes</button>
+    <!-- Edit Modal -->
+    <transition name="fade">
+      <div v-if="showModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-xl w-full max-w-lg shadow-2xl animate-fadeIn">
+          <h3 class="text-xl font-semibold mb-4 text-gray-800">Edit Resource Request</h3>
+
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">Resource Name</label>
+            <input v-model="editResourceName" type="text"
+              class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">Quantity</label>
+            <input v-model="editQuantity" type="number" min="1"
+              class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">Reason</label>
+            <textarea v-model="editReason" rows="3"
+              class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"></textarea>
+          </div>
+
+          <div class="flex justify-end space-x-3 mt-6">
+            <button @click="showModal = false"
+              class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition">Cancel</button>
+            <button @click="updateRequest"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow transition">Save</button>
+          </div>
         </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>

@@ -8,7 +8,7 @@ const employeeMenu = [
   { name: "Dashboard", path: "/dashboard", icon: "📊" },
   { name: "Submit Expense", path: "/expenses", icon: "💰" },
   { name: "Request Resources", path: "/resources", icon: "🛠️" },
-  { name: "Expense Reimbursement", path: "/expenses/reimbursement", icon: "🔄" },
+  { name: "Expense Reimbursement", path: "/expense-reimbursement", icon: "🔄" },
   { name: "View Status", path: "/status", icon: "📋" },
 ];
 

@@ -26,14 +26,13 @@ const fetchDashboardData = async () => {
 
     // Fetch user profile (remove if not used)
     try {
-      const userResponse = await axios.get("http://localhost:5000/api/profile", {
+      const userResponse = await axios.get("http://localhost:5000/api/profile/me", { // <---- CORRECTED URL
         headers: { Authorization: `Bearer ${token}` },
       });
       user.value = userResponse.data;
     } catch (profileError) {
-        console.error("error retrieving profile data", profileError);
+      console.error("error retrieving profile data", profileError);
     }
-
     // Fetch expenses (recent and pending)
     const expensesResponse = await axios.get("http://localhost:5000/api/expenses", {
       headers: { Authorization: `Bearer ${token}` },

@@ -250,4 +250,38 @@ router.put("/:expenseId", verifyToken, (req, res) => {
     }
 });
 
+router.put("/reimburse/:expenseId", verifyToken, (req, res) => {
+    try {
+        const { role } = req.user;
+        const { expenseId } = req.params;
+
+        if (!expenseId) {
+            return res.status(400).json({ message: "Expense ID is required!" });
+        }
+
+        if (role !== "Finance") {
+            return res.status(403).json({ message: "Only Finance can mark expenses as reimbursed!" });
+        }
+
+        db.query(
+            "UPDATE Expense SET Reimbursement_Status = 'Reimbursed', Date_Reimbursed = NOW() WHERE Expense_ID = ? AND Approval_Status = 'Approved' AND (Reimbursement_Status IS NULL OR Reimbursement_Status != 'Reimbursed')",
+            [expenseId],
+            (err, result) => {
+                if (err) {
+                    console.error("❌ Database Error:", err);
+                    return res.status(500).json({ message: "Error marking expense as reimbursed", error: err.message });
+                }
+                if (result.affectedRows === 0) {
+                    return res.status(404).json({ message: "Expense not found, not approved, or already reimbursed!" });
+                }
+
+                res.json({ message: "Expense marked as reimbursed successfully!" });
+            }
+        );
+    } catch (error) {
+        console.error("❌ Unexpected Error:", error);
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
+    }
+});
+
 module.exports = router;
