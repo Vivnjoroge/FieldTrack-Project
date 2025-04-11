@@ -12,43 +12,38 @@ const userRole = ref(localStorage.getItem("role") || "Employee");
 
 // ✅ Compute the correct sidebar dynamically
 const SidebarComponent = computed(() => {
-  switch (userRole.value) {
-    case "Manager":
-      return ManagerSidebar;
-    case "Finance":
-      return FinanceSidebar;
-    case "Admin" :
-      return AdminSidebar;
-    default:
-      return EmployeeSidebar;
-  }
+    switch (userRole.value) {
+        case "Manager":
+            return ManagerSidebar;
+        case "Finance":
+            return FinanceSidebar;
+        case "Admin" :
+            return AdminSidebar;
+        default:
+            return EmployeeSidebar;
+    }
 });
 
 // ✅ Ensure role is updated on page refresh
 onMounted(() => {
-  userRole.value = localStorage.getItem("role") || "Employee";
+    userRole.value = localStorage.getItem("role") || "Employee";
 });
 </script>
 
 <template>
-  <div class="flex h-screen bg-gray-100">
-    <!-- Dynamically load the correct Sidebar -->
-    <component :is="SidebarComponent" />
+    <div class="flex h-screen bg-gray-100">
+        <component :is="SidebarComponent" />
 
-    <!-- Main content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <!-- Navigation (Including Logout Button) -->
-      <Navigation />
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <Navigation />
 
-      <!-- Header -->
-      <Header />
+            <Header />
 
-      <!-- Main content area -->
-      <main class="flex-1 p-6 bg-white rounded-lg shadow-md overflow-auto">
-        <slot />
-      </main>
+            <main class="flex-1 p-6 bg-white rounded-lg shadow-md overflow-auto">
+                <slot />
+            </main>
+        </div>
     </div>
-  </div>
 </template>
 
 <style scoped>

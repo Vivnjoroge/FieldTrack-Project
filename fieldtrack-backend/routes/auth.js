@@ -17,8 +17,7 @@ const getRole = (department) => {
     return "Employee"; // Default role
 };
 
-// 🚀 Register Employee
-// 🚀 Register Employee
+//  Register Employee
 router.post("/register", async (req, res) => {
     const { name, department, email, password } = req.body;
 
@@ -41,20 +40,20 @@ router.post("/register", async (req, res) => {
             (err, result) => {
                 if (err) return res.status(500).json({ message: "Error registering user" });
 
-                console.log("🚀 Register Role (Before Response):", role);
+                console.log("Register Role (Before Response):", role);
 
-                // **✅ Fix: Return the role in the response**
+                // ** Fix: Return the role in the response**
                 res.json({
                     success: true,
                     message: "Registration successful! You can now log in.",
-                    role: role, // ✅ Now returning role correctly
+                    role: role, // Now returning role correctly
                 });
             }
         );
     });
 });
 
-// 🚀 Login User
+// Login User
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -89,7 +88,7 @@ router.post("/login", async (req, res) => {
     });
 });
 
-// 🚀 Logout (Clears token on frontend)
+// Logout (Clears token on frontend)
 router.post("/logout", (req, res) => {
     res.json({ success: true, message: "Logged out successfully!" });
 });

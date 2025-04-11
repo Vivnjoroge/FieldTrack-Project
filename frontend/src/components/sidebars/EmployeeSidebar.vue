@@ -9,7 +9,7 @@ const employeeMenu = [
   { name: "Submit Expense", path: "/expenses", icon: "💰" },
   { name: "Request Resources", path: "/resources", icon: "🛠️" },
   { name: "Expense Reimbursement", path: "/expense-reimbursement", icon: "🔄" },
-  { name: "View Status", path: "/status", icon: "📋" },
+ 
 ];
 
 const navigate = (path) => {
@@ -30,6 +30,3 @@ const navigate = (path) => {
   </aside>
 </template>
 
-<style scoped>
-/* Add custom styling if needed */
-</style>

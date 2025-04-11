@@ -6,7 +6,7 @@ const router = useRouter();
 // Manager Sidebar Menu
 const managerMenu = [
   { name: "Dashboard", path: "/dashboard", icon: "📊" },
-  { name: "Expense Requests", path: "/expenses", icon: "📄" },
+  { name: "Expense Summary", path: "/expense-summary", icon: "📄" },
   { name: "View Employees", path: "/employees", icon: "👥" },
   { name: "Resource Requests", path: "/resources", icon: "🛠️" },
 ];
@@ -29,8 +29,3 @@ const navigate = (path) => {
   </aside>
 </template>
 
-<style scoped>
-/* Custom styles if needed */
-</style>
-
-  

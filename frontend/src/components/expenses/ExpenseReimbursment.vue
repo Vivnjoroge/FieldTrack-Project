@@ -47,7 +47,7 @@ const reimburseExpense = async (expenseId) => {
 
 <template>
     <div>
-      <h2 class="text-xl font-semibold mb-4">Approved Expenses for Reimbursement</h2>
+      <h2 class="text-xl font-semibold mb-4">Reimbursement Requests</h2>
       <div v-if="loading" class="text-gray-500 italic">Loading approved expenses...</div>
       <div v-else-if="error" class="text-red-500">{{ error }}</div>
       <table v-else class="min-w-full divide-y divide-gray-200">

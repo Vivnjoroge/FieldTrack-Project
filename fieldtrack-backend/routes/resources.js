@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require("../config/db");
 const verifyToken = require("../middleware/auth");
 
-// ✅ 1. Employees Request Resources
+// 1. Employees Request Resources
 router.post("/", verifyToken, (req, res) => {
   const { resource_name, quantity, reason } = req.body;
   const { id, role } = req.user;
@@ -26,7 +26,7 @@ router.post("/", verifyToken, (req, res) => {
   );
 });
 
-// ✅ 2. Managers Approve Resource Requests
+//  2. Managers Approve Resource Requests
 router.put("/approve/:resourceId", verifyToken, (req, res) => {
   const { role } = req.user;
   const { resourceId } = req.params;
@@ -51,7 +51,7 @@ router.put("/approve/:resourceId", verifyToken, (req, res) => {
   );
 });
 
-// ✅ 3. Managers Reject Resource Requests
+// 3. Managers Reject Resource Requests
 router.put("/reject/:resourceId", verifyToken, (req, res) => {
   const { role } = req.user;
   const { resourceId } = req.params;
@@ -75,29 +75,58 @@ router.put("/reject/:resourceId", verifyToken, (req, res) => {
     }
   );
 });
-
-// ✅ 4. Get Resource Requests (Employees see their own, Managers see all)
+// 4. Get Resource Requests (Employees see their own, Managers see all)
 router.get("/", verifyToken, (req, res) => {
   const { id, role } = req.user;
 
-  let query = "SELECT * FROM Resource";
+  let query = `
+      SELECT
+          r.Resource_ID,
+          r.Resource_Name,
+          r.Quantity,
+          r.Reason,
+          r.Date_Requested,
+          r.Status,
+          e.Employee_ID AS Employee_ID,
+          e.Name AS Employee_Name
+      FROM
+          Resource r
+      LEFT JOIN
+          Employee e ON r.Employee_ID = e.Employee_ID
+  `;
   let params = [];
 
   if (role === "Employee") {
-    query = "SELECT * FROM Resource WHERE Employee_ID = ?";
-    params = [id];
+      query = `
+          SELECT
+              r.Resource_ID,
+              r.Resource_Name,
+              r.Quantity,
+              r.Reason,
+              r.Date_Requested,
+              r.Status,
+              e.Employee_ID AS Employee_ID,
+              e.Name AS Employee_Name
+          FROM
+              Resource r
+          LEFT JOIN
+              Employee e ON r.Employee_ID = e.Employee_ID
+          WHERE
+              r.Employee_ID = ?
+      `;
+      params = [id];
   }
 
   db.query(query, params, (err, results) => {
-    if (err) {
-      console.error("Database Error:", err.sqlMessage);
-      return res.status(500).json({ message: "Error fetching resource requests", error: err.sqlMessage });
-    }
-    res.json(results);
+      if (err) {
+          console.error("Database Error:", err.sqlMessage);
+          return res.status(500).json({ message: "Error fetching resource requests", error: err.sqlMessage });
+      }
+      res.json(results);
   });
 });
 
-// ✅ 5. Update Resource Request (Employees can edit their own)
+// 5. Update Resource Request (Employees can edit their own)
 router.put("/:resourceId", verifyToken, (req, res) => {
   const { resource_name, quantity, reason } = req.body;
   const { resourceId } = req.params;
@@ -119,7 +148,7 @@ router.put("/:resourceId", verifyToken, (req, res) => {
   );
 });
 
-// ✅ 6. Delete Resource Request (Employees can delete their own)
+// 6. Delete Resource Request (Employees can delete their own)
 router.delete("/:resourceId", verifyToken, (req, res) => {
   const { resourceId } = req.params;
   const { id, role } = req.user;

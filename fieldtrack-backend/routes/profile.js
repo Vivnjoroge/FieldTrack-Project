@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
-const authMiddleware = require("../middleware/auth"); // ✅ Import Auth Middleware
+const authMiddleware = require("../middleware/auth"); // ✅Import Auth Middleware
 
 // GET logged-in user profile (Requires Auth)
 router.get("/me", authMiddleware, (req, res) => {
@@ -11,7 +11,7 @@ router.get("/me", authMiddleware, (req, res) => {
 
     db.query(query, [userId], (err, results) => {
         if (err) {
-            console.error("❌ Database Query Error:", err);
+            console.error("Database Query Error:", err);
             return res.status(500).json({ message: "Database error", error: err });
         }
         console.log("🟢 Database Query Results:", results);

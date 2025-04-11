@@ -3,6 +3,7 @@ import AuthenticationView from "@/views/AuthenticationView.vue";
 import DashboardView from "@/views/DashboardView.vue";
 import ExpenseView from "@/views/ExpenseView.vue";
 import ExpenseReimbursment from "@/views/ExpenseReimbursmentView.vue";
+import ExpenseSummary from "@/components/expenses/ExpenseSummary.vue";
 import RequestResourceView from "@/views/RequestResourceView.vue";
 import EmployeesView from "@/views/EmployeesView.vue";
 import ReportsView from "@/views/ReportsView.vue";
@@ -13,6 +14,7 @@ const routes = [
   { path: "/auth", component: AuthenticationView },
   { path: "/dashboard", component: DashboardView, meta: { requiresAuth: true } },
   { path: "/expenses", component: ExpenseView, meta: { requiresAuth: true } },
+  { path: "/expense-summary", component: ExpenseSummary, meta: { requiresAuth: true } },
   {path: "/expense-reimbursement" , component: ExpenseReimbursment, meta: {requiresAuth: true}},
   { path: "/resources", component: RequestResourceView, meta: { requiresAuth: true } },
   { path: "/employees", component: EmployeesView, meta: { requiresAuth: true } },
@@ -26,22 +28,22 @@ const router = createRouter({
   routes,
 });
 
-// ✅ Updated Navigation Guard
+// Updated Navigation Guard
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  // 🚫 Redirect unauthenticated users to login
+  //  Redirect unauthenticated users to login
   if (to.meta.requiresAuth && !token) {
     return next("/auth");
   }
 
-  // 🔄 Prevent authenticated users from accessing /auth again
+  //  Prevent authenticated users from accessing /auth again
   if (token && to.path === "/auth") {
     return next("/dashboard");
   }
 
-  next(); // ✅ Allow navigation
+  next(); //  Allow navigation
 });
 
 export default router;

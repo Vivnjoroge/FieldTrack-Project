@@ -1,128 +1,109 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import axios from "axios"; // ✅ Make sure axios is imported
+import ExpenseSummary from "../expenses/ExpenseSummary.vue";
+import RequestResource from "../resources/RequestResource.vue";
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const resources = ref([]);
-const loadingResources = ref(true);
-const resourceError = ref(null);
+const userProfile = ref(null); // ✅ Declare userProfile as a reactive ref
 
-onMounted(async () => {
-  const role = localStorage.getItem("role");
-  if (role !== "Manager") {
-    return router.push("/unauthorized");
-  }
+// ✅ Fetch user profile
+const fetchUserProfile = async () => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/api/profile/me", {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        userProfile.value = response.data;
+    } catch (error) {
+        console.error("Error fetching profile:", error);
+    }
+};
 
-  try {
-    const token = localStorage.getItem("token");
-    const headers = { Authorization: `Bearer ${token}` };
-
-    resources.value = await (await fetch("http://localhost:5000/api/resources", { headers })).json();
-    loadingResources.value = false;
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    resourceError.value = "Failed to load resource data.";
-    loadingResources.value = false;
-  }
+onMounted(() => {
+    const role = localStorage.getItem("role");
+    if (role !== "Manager") {
+        router.push("/unauthorized");
+    } else {
+        fetchUserProfile(); // ✅ Call this only if role is Manager
+    }
 });
-
-const approveResource = async (resourceId) => {
-  try {
-    const token = localStorage.getItem("token");
-    const headers = { Authorization: `Bearer ${token}` };
-
-    const response = await fetch(`http://localhost:5000/api/resources/approve/${resourceId}`, {
-      method: "PUT",
-      headers: headers,
-    });
-
-    if (response.ok) {
-      const resource = resources.value.find((r) => r.Resource_ID === resourceId);
-      if (resource) {
-        resource.Status = "Approved";
-      }
-    } else {
-      console.error("Failed to approve resource:", await response.json());
-      alert('Failed to approve resource.');
-    }
-  } catch (error) {
-    console.error("Error approving resource:", error);
-    alert('An unexpected error occurred during approval.');
-
-  }
-};
-
-const rejectResource = async (resourceId) => {
-  try {
-    const token = localStorage.getItem("token");
-    const headers = { Authorization: `Bearer ${token}` };
-
-    const response = await fetch(`http://localhost:5000/api/resources/reject/${resourceId}`, {
-      method: "PUT",
-      headers: headers,
-    });
-
-    if (response.ok) {
-      const resource = resources.value.find((r) => r.Resource_ID === resourceId);
-      if (resource) {
-        resource.Status = "Rejected";
-      }
-    } else {
-      console.error("Failed to reject resource:", await response.json());
-      alert('Failed to reject resource.');
-    }
-  } catch (error) {
-    console.error("Error rejecting resource:", error);
-    alert('An unexpected error occurred during rejection.');
-  }
-};
 </script>
 
 <template>
-  <div class="p-8">
-    <h1 class="text-3xl font-bold mb-6">Manager Dashboard</h1>
+    <div class="bg-gray-100 min-h-screen p-6 sm:p-8 md:p-12">
+        <header class="mb-8">
+            <h1 class="text-3xl font-semibold text-gray-800 flex items-center gap-3">
+                📊 <span class="text-blue-600">Manager Dashboard</span>
+            </h1>
+            <h1 v-if="userProfile" class="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
+                Welcome, {{ userProfile.Name }}
+                <span v-if="userProfile.Department" class="text-sm text-gray-600">
+                    ({{ userProfile.Department }})
+                </span>
+            </h1>
+        </header>
 
-    <div class="mb-8">
-      <h2 class="text-2xl font-semibold mb-4">Expense Approval Requests</h2>
-      <div v-if="loadingExpenses">Loading...</div>
-      <div v-else-if="expenseError" class="text-red-500">{{ expenseError }}</div>
-      <div v-else-if="expenseRequests && expenseRequests.length > 0">
-        <table class="min-w-full divide-y divide-gray-200">
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="expense in expenseRequests" :key="expense.id">
-              </tr>
-          </tbody>
-        </table>
-      </div>
-      <p v-else class="text-gray-500 italic">No expense approval requests found.</p>
-    </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                        ⚡ Quick Actions
+                    </h2>
+                    <div class="flex flex-col gap-3">
+                        <button
+                            @click="$router.push('/expense-summary')"
+                            class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-md transition duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                            <span class="text-sm sm:text-base">Expenses Summary</span>
+                        </button>
+                        <button
+                            @click="$router.push('/resources')"
+                            class="bg-green-500 hover:bg-green-600 text-white font-medium py-3 rounded-md transition duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                        >
+                            <span class="text-sm sm:text-base">Manage Resources</span>
+                        </button>
+                        <button
+                            @click="$router.push('/employees')"
+                            class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 rounded-md transition duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        >
+                            <span class="text-sm sm:text-base">View Employees</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-    <div class="mb-8">
-      <h2 class="text-2xl font-semibold mb-4">Budget Tracking</h2>
-      <div v-if="loadingBudgets">Loading...</div>
-      <div v-else-if="budgetError" class="text-red-500">{{ budgetError }}</div>
-      <div v-else-if="departmentBudgets && departmentBudgets.length > 0">
-        <table class="min-w-full divide-y divide-gray-200">
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="budget in departmentBudgets" :key="budget.department">
-              </tr>
-          </tbody>
-        </table>
-      </div>
-      <p v-else class="text-gray-500 italic">No budget tracking data found.</p>
-    </div>
+            <!-- Monthly Expense Summary -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-2m3-9l-3 3m-3-3l3 3m-3-3l-3 3" />
+                        </svg>
+                        Monthly Expense Summary
+                    </h2>
+                    <div class="overflow-auto">
+                        <ExpenseSummary />
+                    </div>
+                </div>
+            </div>
 
-    <div>
-      <h2 class="text-2xl font-semibold mb-4">Resource Allocation</h2>
-      <div v-if="loadingResources">Loading...</div>
-      <div v-else-if="resourceError" class="text-red-500">{{ resourceError }}</div>
-      <div v-else-if="resources && resources.length > 0">
-        <ul class="space-y-2">
-          <li v-for="resource in resources" :key="resource.Resource_ID" class="bg-white p-4 rounded shadow">
-            </li>
-        </ul>
-      </div>
-      <p v-else class="text-gray-500 italic">No resource allocation data found.</p>
+            <!-- Pending Resource Requests -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Pending Resource Requests
+                    </h2>
+                    <div class="overflow-auto">
+                        <RequestResource />
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </template>

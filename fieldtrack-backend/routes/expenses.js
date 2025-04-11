@@ -7,7 +7,7 @@ const verifyToken = require("../middleware/auth");
 router.post("/", verifyToken, (req, res) => {
     try {
         const { expense_type, amount, description, receipt } = req.body;
-        console.log("🟢 Received Data:", req.body);
+        console.log("Received Data:", req.body);
 
         if (!expense_type || !amount || !description) {
             return res.status(400).json({ message: "Missing required fields!" });
@@ -28,7 +28,7 @@ router.post("/", verifyToken, (req, res) => {
             [id, expense_type, amount, description, receipt || null, date_submitted],
             (err, result) => {
                 if (err) {
-                    console.error("❌ Database Insert Error:", err);
+                    console.error("Database Insert Error:", err);
                     return res.status(500).json({ message: "Error creating expense", error: err.message });
                 }
                 console.log("✅ Inserted Data Successfully!", result);
@@ -58,7 +58,7 @@ router.put("/approve/:expenseId", verifyToken, (req, res) => {
             [expenseId],
             (err, result) => {
                 if (err) {
-                    console.error("❌ Database Error:", err);
+                    console.error("Database Error:", err);
                     return res.status(500).json({ message: "Error approving expense", error: err.message });
                 }
                 if (result.affectedRows === 0) {
@@ -69,7 +69,7 @@ router.put("/approve/:expenseId", verifyToken, (req, res) => {
             }
         );
     } catch (error) {
-        console.error("❌ Unexpected Error:", error);
+        console.error("Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
@@ -91,7 +91,7 @@ router.put("/reject/:expenseId", verifyToken, (req, res) => {
             [expenseId],
             (err, result) => {
                 if (err) {
-                    console.error("❌ Database Error:", err);
+                    console.error("Database Error:", err);
                     return res.status(500).json({ message: "Error rejecting expense", error: err.message });
                 }
                 if (result.affectedRows === 0) {
@@ -102,13 +102,13 @@ router.put("/reject/:expenseId", verifyToken, (req, res) => {
             }
         );
     } catch (error) {
-        console.error("❌ Unexpected Error:", error);
+        console.error("Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
 
-// ✅ 4. Get Expenses (Employees see their own, Finance sees all)
-// ✅ 4. Get Expenses (Employees see their own, Finance and Management see all)
+
+// . Get Expenses (Employees see their own, Finance and Management see all)
 router.get("/", verifyToken, (req, res) => {
     try {
         const { id, role } = req.user;
@@ -131,26 +131,26 @@ router.get("/", verifyToken, (req, res) => {
             params = [id];
         }
 
-        console.log("🟢 Executing Query:", query);
-        console.log("🟢 Query Parameters:", params);
+        console.log("Executing Query:", query);
+        console.log("Query Parameters:", params);
 
         db.query(query, params, (err, results) => {
             if (err) {
-                console.error("❌ Database Error:", err);
+                console.error("Database Error:", err);
                 return res.status(500).json({ message: "Error fetching expenses", error: err.message });
             }
 
-            console.log("🟢 Query Results:", results);
+            console.log("Query Results:", results);
 
             // Ensure the response is in the correct format!
             res.json(results); // Send just the expenses array
         });
     } catch (error) {
-        console.error("❌ Unexpected Error:", error);
+        console.error(" Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
-// ✅ 5. Get Expense by ID
+// 5. Get Expense by ID
 router.get("/:expenseId", verifyToken, (req, res) => {
     try {
         const { expenseId } = req.params;
@@ -168,7 +168,7 @@ router.get("/:expenseId", verifyToken, (req, res) => {
 
         db.query(query, params, (err, results) => {
             if (err) {
-                console.error("❌ Database Error:", err);
+                console.error("Database Error:", err);
                 return res.status(500).json({ message: "Error fetching expense details", error: err.message });
             }
             if (results.length === 0) {
@@ -178,12 +178,12 @@ router.get("/:expenseId", verifyToken, (req, res) => {
             res.json(results[0]);
         });
     } catch (error) {
-        console.error("❌ Unexpected Error:", error);
+        console.error("Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
 
-// ✅ 6. Delete Expense
+//  6. Delete Expense
 router.delete("/:expenseId", verifyToken, (req, res) => {
     try {
         const { expenseId } = req.params;
@@ -201,7 +201,7 @@ router.delete("/:expenseId", verifyToken, (req, res) => {
 
         db.query(query, params, (err, result) => {
             if (err) {
-                console.error("❌ Database Error:", err);
+                console.error(" Database Error:", err);
                 return res.status(500).json({ message: "Error deleting expense", error: err.message });
             }
             if (result.affectedRows === 0) {
@@ -211,12 +211,12 @@ router.delete("/:expenseId", verifyToken, (req, res) => {
             res.json({ message: "Expense deleted successfully!" });
         });
     } catch (error) {
-        console.error("❌ Unexpected Error:", error);
+        console.error("Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
 
-// ✅ 7. Edit Expense
+// 7. Edit Expense
 router.put("/:expenseId", verifyToken, (req, res) => {
     try {
         const { expenseId } = req.params;
@@ -235,7 +235,7 @@ router.put("/:expenseId", verifyToken, (req, res) => {
 
         db.query(query, params, (err, result) => {
             if (err) {
-                console.error("❌ Database Error:", err);
+                console.error(" Database Error:", err);
                 return res.status(500).json({ message: "Error updating expense", error: err.message });
             }
             if (result.affectedRows === 0) {
@@ -245,7 +245,7 @@ router.put("/:expenseId", verifyToken, (req, res) => {
             res.json({ message: "Expense updated successfully!" });
         });
     } catch (error) {
-        console.error("❌ Unexpected Error:", error);
+        console.error(" Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
@@ -255,11 +255,16 @@ router.put("/reimburse/:expenseId", verifyToken, (req, res) => {
         const { role } = req.user;
         const { expenseId } = req.params;
 
+        console.log("Reimburse Request Received for Expense ID:", expenseId);
+        console.log("User Role:", role);
+
         if (!expenseId) {
+            console.log("Error: Expense ID is missing!");
             return res.status(400).json({ message: "Expense ID is required!" });
         }
 
         if (role !== "Finance") {
+            console.log("Error: User is not Finance!");
             return res.status(403).json({ message: "Only Finance can mark expenses as reimbursed!" });
         }
 
@@ -267,8 +272,12 @@ router.put("/reimburse/:expenseId", verifyToken, (req, res) => {
             "UPDATE Expense SET Reimbursement_Status = 'Reimbursed', Date_Reimbursed = NOW() WHERE Expense_ID = ? AND Approval_Status = 'Approved' AND (Reimbursement_Status IS NULL OR Reimbursement_Status != 'Reimbursed')",
             [expenseId],
             (err, result) => {
+                console.log("Database Query:", this.sql); // Log the actual SQL query
+                console.log("Database Error:", err);
+                console.log("Database Result:", result);
+
                 if (err) {
-                    console.error("❌ Database Error:", err);
+                    console.error("Database Error:", err);
                     return res.status(500).json({ message: "Error marking expense as reimbursed", error: err.message });
                 }
                 if (result.affectedRows === 0) {
@@ -279,7 +288,7 @@ router.put("/reimburse/:expenseId", verifyToken, (req, res) => {
             }
         );
     } catch (error) {
-        console.error("❌ Unexpected Error:", error);
+        console.error("Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });

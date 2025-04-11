@@ -7,7 +7,7 @@ const router = useRouter();
 const financeMenu = [
   { name: "Dashboard", path: "/dashboard", icon: "📊" },
   { name: "All Expenses", path: "/expenses", icon: "💰" },
-  { name: "Reimbursement Requests", path: "/finance/reimbursements", icon: "🔄" },
+  { name: "Reimbursement Requests", path: "expense-reimbursement", icon: "🔄" },
   { name: "Financial Reports", path: "/reports", icon: "📊" },
 ];
 
@@ -31,6 +31,3 @@ const navigate = (path) => {
   </aside>
 </template>
 
-<style scoped>
-/* Custom styles if needed */
-</style>

@@ -21,7 +21,7 @@ const editedExpenseType = ref("");
 
 // Get department from localStorage
 const getUserDepartment = () => {
-    return localStorage.getItem("department"); // No default value
+  return localStorage.getItem("department"); // No default value
 };
 
 // Computed property to show form
@@ -30,7 +30,7 @@ const showForm = computed(() => {
   return allowedDepartments.includes(userDepartment.value.toLowerCase());
 });
 
-// Fetch Expenses
+// Fetch Expenses with Employee Name
 const fetchExpenses = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -42,7 +42,7 @@ const fetchExpenses = async () => {
 
     expenses.value = response.data;
   } catch (error) {
-    console.error("❌ Error Fetching Expenses:", error);
+    console.error("Error Fetching Expenses:", error);
   }
 };
 
@@ -76,7 +76,7 @@ const handleSubmit = async () => {
         reader.onerror = (error) => reject(error);
       });
     } catch (error) {
-      console.error("❌ Receipt Read Error:", error);
+      console.error(" Receipt Read Error:", error);
       message.value = "Error reading receipt.";
       messageClass.value = "text-red-600 bg-red-100";
       loading.value = false;
@@ -109,7 +109,7 @@ const handleSubmit = async () => {
 
     fetchExpenses();
   } catch (error) {
-    console.error("❌ Submission Error:", error);
+    console.error("Submission Error:", error);
     message.value = "Failed to submit expense.";
     messageClass.value = "text-red-600 bg-red-100";
 
@@ -147,7 +147,7 @@ const rejectExpense = async (expenseId) => {
     });
     fetchExpenses();
   } catch (error) {
-    console.error("❌ Rejection Error:", error);
+    console.error("Rejection Error:", error);
   }
 };
 
@@ -164,7 +164,7 @@ const closeModal = () => {
 
 // Delete expense
 const deleteExpense = async (expenseId) => {
-  console.log("Deleting Expense ID:", expenseId); 
+  console.log("Deleting Expense ID:", expenseId);
   const token = localStorage.getItem("token");
   if (!token) return;
 
@@ -174,7 +174,7 @@ const deleteExpense = async (expenseId) => {
     });
     fetchExpenses();
   } catch (error) {
-    console.error("❌ Delete Error:", error);
+    console.error("Delete Error:", error);
   }
 };
 
@@ -203,10 +203,9 @@ const saveEditedExpense = async () => {
     fetchExpenses();
     showModal.value = false;
   } catch (error) {
-    console.error("❌ Update Error:", error);
+    console.error("Update Error:", error);
   }
 };
-
 
 // Ensure department is set before running fetchExpenses
 onMounted(async () => {
@@ -220,11 +219,6 @@ onMounted(async () => {
   <div class="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-2xl rounded-xl border border-gray-100">
     <h2 class="text-4xl font-extrabold text-gray-800 text-center mb-8">Expense Management</h2>
 
-    <!-- <div class="mb-4 text-sm text-gray-600">
-      <p><span class="font-semibold">User Department:</span> {{ userDepartment }}</p>
-      <p><span class="font-semibold">Show Form:</span> {{ showForm }}</p>
-    </div>
- -->
     <div v-if="showForm" class="mb-10 p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
       <h3 class="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">Submit Expense</h3>
 
@@ -259,14 +253,12 @@ onMounted(async () => {
       </form>
     </div>
 
-    <div v-else class="text-center text-gray-500 italic mb-8">
-      Expense submission is not allowed for your department.
-    </div>
-
     <div class="overflow-x-auto bg-white p-4 rounded-xl shadow-md border border-gray-100">
       <table class="w-full border-collapse text-left text-sm text-gray-700">
         <thead>
           <tr class="bg-blue-50 text-gray-800 text-sm uppercase tracking-wide">
+            <th class="border px-4 py-2">Employee ID</th>
+            <th class="border px-4 py-2">Employee Name</th>
             <th class="border px-4 py-2">Amount</th>
             <th class="border px-4 py-2">Description</th>
             <th class="border px-4 py-2">Type</th>
@@ -277,6 +269,8 @@ onMounted(async () => {
         </thead>
         <tbody>
           <tr v-for="expense in expenses" :key="expense.Expense_ID" class="hover:bg-gray-50">
+            <td class="border px-4 py-2">{{ expense.Employee_ID }}</td>
+            <td class="border px-4 py-2">{{ expense.Employee_Name }}</td>
             <td class="border px-4 py-2 font-semibold text-gray-900">Ksh {{ expense.Amount }}</td>
             <td class="border px-4 py-2">{{ expense.Description }}</td>
             <td class="border px-4 py-2">{{ expense.Expense_Type }}</td>
@@ -286,9 +280,9 @@ onMounted(async () => {
             </td>
             <td class="border px-4 py-2 font-semibold text-center">
               <span v-if="expense.Approval_Status !== 'Pending'" :class="{
-                'text-green-600': expense.Approval_Status === 'Approved',
-                'text-red-600': expense.Approval_Status === 'Rejected'
-              }">
+                  'text-green-600': expense.Approval_Status === 'Approved',
+                  'text-red-600': expense.Approval_Status === 'Rejected'
+                }">
                 {{ expense.Approval_Status }}
               </span>
               <div v-else-if="userDepartment.toLowerCase() === 'finance'" class="flex justify-center space-x-2">
@@ -310,7 +304,6 @@ onMounted(async () => {
       </table>
     </div>
 
-    <!-- Modal -->
     <div v-if="showModal" class="fixed z-50 inset-0 overflow-y-auto">
       <div class="flex items-center justify-center min-h-screen px-4 py-12 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
@@ -336,8 +329,7 @@ onMounted(async () => {
               <button @click="saveEditedExpense" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md">Save</button>
             </div>
           </div>
-
-          <div class="bg-gray-100 px-6 py-4 sm:flex sm:flex-row-reverse">
+     <div class="bg-gray-100 px-6 py-4 sm:flex sm:flex-row-reverse">
             <button @click="closeModal" type="button" class="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-white font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-sm">
               Close
             </button>
