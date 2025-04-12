@@ -13,6 +13,12 @@ const reason = ref("");
 const message = ref("");
 const messageClass = ref("");
 
+// Validation
+const formErrors = ref({
+    resourceName: "",
+    reason: ""
+});
+
 // Resource Requests
 const resourceRequests = ref([]);
 const loading = ref(false);
@@ -23,6 +29,10 @@ const editResourceId = ref(null);
 const editResourceName = ref("");
 const editQuantity = ref(1);
 const editReason = ref("");
+const editErrors = ref({
+    resourceName: "",
+    reason: ""
+});
 
 // Fetch User Role
 const fetchUserRole = async () => {
@@ -41,7 +51,7 @@ const fetchUserRole = async () => {
     }
 };
 
-// Fetch Resource Requests with Employee Info
+// Fetch Resource Requests
 const fetchResources = async () => {
     try {
         loading.value = true;
@@ -67,8 +77,25 @@ const fetchResources = async () => {
     }
 };
 
-// Submit Request with Employee ID
+// Validate Input
+const isValidText = (text) => {
+    return isNaN(text) && text.trim() !== "";
+};
+
+// Submit Request
 const submitRequest = async () => {
+    formErrors.value.resourceName = "";
+    formErrors.value.reason = "";
+
+    if (!isValidText(resourceName.value)) {
+        formErrors.value.resourceName = "Resource name cannot be a number.";
+        return;
+    }
+    if (!isValidText(reason.value)) {
+        formErrors.value.reason = "Reason cannot be a number.";
+        return;
+    }
+
     try {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -130,17 +157,31 @@ const rejectRequest = async (requestId) => {
     }
 };
 
-// Edit Request
+// Show Edit Modal
 const showEditModal = (resourceId) => {
     const request = resourceRequests.value.find((r) => r.Resource_ID === resourceId);
     editResourceId.value = resourceId;
     editResourceName.value = request.Resource_Name;
     editQuantity.value = request.Quantity;
     editReason.value = request.Reason;
+    editErrors.value = { resourceName: "", reason: "" };
     showModal.value = true;
 };
 
+// Update Request
 const updateRequest = async () => {
+    editErrors.value.resourceName = "";
+    editErrors.value.reason = "";
+
+    if (!isValidText(editResourceName.value)) {
+        editErrors.value.resourceName = "Resource name cannot be a number.";
+        return;
+    }
+    if (!isValidText(editReason.value)) {
+        editErrors.value.reason = "Reason cannot be a number.";
+        return;
+    }
+
     try {
         const token = localStorage.getItem("token");
         await axios.put(`http://localhost:5000/api/resources/${editResourceId.value}`, {
@@ -185,6 +226,7 @@ onMounted(() => {
 });
 </script>
 
+
 <template>
     <div class="max-w-4xl mx-auto bg-white shadow-xl p-8 rounded-xl mt-10">
         <div class="flex justify-between items-center mb-6">
@@ -204,10 +246,11 @@ onMounted(() => {
 
         <form v-if="showRequestForm" @submit.prevent="submitRequest" class="space-y-5">
             <div>
-                <label class="block text-gray-700 font-semibold mb-1">Resource Name</label>
-                <input type="text" v-model="resourceName" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                    placeholder="Enter resource name" />
+              <label class="block text-gray-700 font-semibold mb-1">Resource Name</label>
+              <input type="text" v-model="resourceName" required
+               class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                 placeholder="Enter resource name" />
+             <p v-if="formErrors.resourceName" class="text-sm text-red-500 mt-1">{{ formErrors.resourceName }}</p>
             </div>
 
             <div>
@@ -218,11 +261,12 @@ onMounted(() => {
             </div>
 
             <div>
-                <label class="block text-gray-700 font-semibold mb-1">Reason</label>
-                <textarea v-model="reason" required rows="4"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                    placeholder="Explain why you need this resource"></textarea>
-            </div>
+    <label class="block text-gray-700 font-semibold mb-1">Reason</label>
+    <textarea v-model="reason" required rows="4"
+        class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+        placeholder="Explain why you need this resource"></textarea>
+    <p v-if="formErrors.reason" class="text-sm text-red-500 mt-1">{{ formErrors.reason }}</p>
+     </div>
 
             <button type="submit" :disabled="loading"
                 class="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 font-semibold transition duration-300 shadow">
@@ -299,21 +343,25 @@ onMounted(() => {
                 <div class="bg-white p-6 rounded-xl w-full max-w-lg shadow-2xl animate-fadeIn">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Edit Resource Request</h3>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1 font-medium">Resource Name</label>
-                        <input v-model="editResourceName" type="text"
-                            class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none" />
-                    </div>
+                    <!-- Edit Resource Name -->
+           <div class="mb-4">
+             <label class="block text-gray-700 mb-1 font-medium">Resource Name</label>
+             <input v-model="editResourceName" type="text"
+             class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+           <p v-if="editErrors.resourceName" class="text-sm text-red-500 mt-1">{{ editErrors.resourceName }}</p>
+           </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-1 font-medium">Quantity</label>
                         <input v-model="editQuantity" type="number" min="1"
                             class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none" />
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1 font-medium">Reason</label>
-                        <textarea v-model="editReason" rows="3"
-                            class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"></textarea>
-                    </div>
+                    <!-- Edit Reason -->
+              <div class="mb-4">
+             <label class="block text-gray-700 mb-1 font-medium">Reason</label>
+              <textarea v-model="editReason" rows="3"
+                class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"></textarea>
+               <p v-if="editErrors.reason" class="text-sm text-red-500 mt-1">{{ editErrors.reason }}</p>
+             </div>
 
                     <div class="flex justify-end space-x-3 mt-6">
                         <button @click="showModal = false"
