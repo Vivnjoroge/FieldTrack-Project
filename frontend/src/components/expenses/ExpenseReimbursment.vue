@@ -200,7 +200,7 @@ onMounted(() => {
                     <option value="Travel">Travel</option>
                     <option value="Accommodation">Accommodation</option>
                     <option value="Meals">Meals</option>
-                    <option value="Supplies">Supplies</option>
+                    <option value="Fuel">Fuel</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
