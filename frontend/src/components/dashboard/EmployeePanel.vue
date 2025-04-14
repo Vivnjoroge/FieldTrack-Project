@@ -13,6 +13,20 @@ const userProfile = ref(null);
 const loading = ref(true);
 const errorMessage = ref(null);
 
+// You no longer need the 'open' prop or emit here
+// defineProps({
+//   open: {
+//     type: Boolean,
+//     default: true
+//   }
+// });
+
+// const emit = defineEmits(['update:open']);
+
+// const closeSidebar = () => {
+//   emit('update:open', false);
+// };
+
 // ✅ Fetch User Profile
 const fetchUserProfile = async () => {
   try {
@@ -76,113 +90,192 @@ const fetchDashboardData = async () => {
 
 // ✅ onMounted Hook
 onMounted(() => {
-  fetchUserProfile();       // Now it's accessible!
+  fetchUserProfile();      // Now it's accessible!
   fetchDashboardData();
 });
 </script>
 
-
 <template>
-  <div class="bg-gray-50 min-h-screen py-8 px-4 md:px-8">
-    <div class="max-w-6xl mx-auto space-y-8">
-
-      <!-- Welcome Card -->
-      <div class="bg-white shadow rounded-2xl p-6 md:p-8">
-        <h1 v-if="userProfile" class="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
-          Welcome, {{ userProfile.Name }}
-          <span v-if="userProfile.Department" class="text-sm text-gray-600">({{ userProfile.Department }})</span>
-        </h1>
-        <p v-else class="text-gray-600 text-base">Here's a quick overview of your employee panel.</p>
-      </div>
-
-      <!-- Stats Overview -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        <div class="bg-blue-600 text-white p-6 rounded-xl shadow hover:shadow-lg transition duration-300">
-          <h2 class="text-lg font-semibold mb-1">Total Expenses</h2>
-          <p class="text-4xl font-bold">{{ totalExpenses }}</p>
-          <p class="text-sm opacity-80 mt-1">All submitted expenses</p>
+  <div class="bg-gray-100 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto space-y-8">
+      <div class="md:flex md:items-center md:justify-between">
+        <div class="flex items-center">
+          <span class="text-yellow-500 text-2xl mr-2">👋</span>
+          <h2 v-if="userProfile" class="text-2xl font-semibold text-gray-900 leading-tight">
+            Welcome, <span class="text-indigo-700">{{ userProfile.Name }}</span>
+          </h2>
         </div>
-        <div class="bg-orange-500 text-white p-6 rounded-xl shadow hover:shadow-lg transition duration-300">
-          <h2 class="text-lg font-semibold mb-1">Pending Reimbursements</h2>
-          <p class="text-4xl font-bold">{{ pendingReimbursements }}</p>
-          <p class="text-sm opacity-80 mt-1">Expenses awaiting approval</p>
-        </div>
-        <div class="bg-green-600 text-white p-6 rounded-xl shadow hover:shadow-lg transition duration-300">
-          <h2 class="text-lg font-semibold mb-1">Approved Requests</h2>
-          <p class="text-4xl font-bold">{{ approvedRequests }}</p>
-          <p class="text-sm opacity-80 mt-1">Expenses that have been approved</p>
-        </div>
-      </div>
-
-      <!-- Recent Submissions -->
-      <div class="bg-white shadow rounded-2xl p-6">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Recent Submissions</h2>
-        <div v-if="recentSubmissions.length === 0" class="text-gray-500 italic">No recent submissions.</div>
-        <ul v-else class="divide-y divide-gray-200">
-          <li
-            v-for="item in recentSubmissions"
-            :key="item.id"
-            class="py-4 flex flex-col md:flex-row md:items-center justify-between gap-2"
-          >
-            <span class="text-gray-800 font-medium">{{ item.type }}</span>
-            <span
-              class="text-sm font-semibold px-3 py-1 rounded-full"
-              :class="{
-                'bg-yellow-200 text-yellow-700': item.status === 'Pending',
-                'bg-green-200 text-green-700': item.status === 'Approved',
-                'bg-red-200 text-red-700': item.status === 'Rejected'
-              }"
-            >
-              {{ item.status }}
-            </span>
-            <span class="text-sm text-gray-500">{{ new Date(item.date).toLocaleDateString() }}</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Pending Requests -->
-      <div class="bg-white shadow rounded-2xl p-6">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Pending Requests</h2>
-        <div v-if="pendingRequests.length === 0" class="text-gray-500 italic">No pending requests.</div>
-        <ul v-else class="divide-y divide-gray-200">
-          <li
-            v-for="item in pendingRequests"
-            :key="item.id"
-            class="py-4 flex flex-col md:flex-row md:items-center justify-between gap-2"
-          >
-            <span class="text-gray-800 font-medium">{{ item.type }}</span>
-            <span class="text-sm font-semibold bg-yellow-200 text-yellow-700 px-3 py-1 rounded-full">
-              {{ item.status }}
-            </span>
-            <span class="text-sm text-gray-500">{{ new Date(item.date).toLocaleDateString() }}</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="bg-white shadow rounded-2xl p-6">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
-        <div class="flex flex-col sm:flex-row gap-4">
+        <p class="mt-1 text-sm text-gray-600">
+          Department: <span class="font-medium text-gray-800">{{ userProfile?.Department || 'Not assigned' }}</span>
+        </p>
+        <div class="mt-4 flex md:mt-0 md:ml-4 space-x-2">
           <button
             @click="router.push('/expenses')"
-            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium shadow transition hover:scale-105"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h13M9 11V5H3v6h6zm0 0v6h6V5h6v6H9z" />
-            </svg>
-            Submit Expense
+            <span class="material-icons mr-2">add</span> Submit Expense
+          </button>
+          <button
+            @click="router.push('/reports')"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <span class="material-icons mr-2">assessment</span> View Reports
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-blue-50 shadow rounded-lg overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                  <span class="material-icons text-xl">attach_money</span>
+                </span>
+              </div>
+              <div class="ml-4">
+                <dt class="text-sm font-medium text-gray-600 truncate">Total Expenses</dt>
+                <dd class="mt-1 text-3xl font-semibold text-blue-700">{{ totalExpenses }}</dd>
+                <p class="mt-1 text-sm text-gray-600">All submitted expenses</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-amber-50 shadow rounded-lg overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-amber-500 text-white">
+                  <span class="material-icons text-xl">hourglass_empty</span>
+                </span>
+              </div>
+              <div class="ml-4">
+                <dt class="text-sm font-medium text-gray-600 truncate">Pending Reimbursements</dt>
+                <dd class="mt-1 text-3xl font-semibold text-amber-700">{{ pendingReimbursements }}</dd>
+                <p class="mt-1 text-sm text-gray-600">Awaiting approval</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-green-50 shadow rounded-lg overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white">
+                  <span class="material-icons text-xl">check_circle</span>
+                </span>
+              </div>
+              <div class="ml-4">
+                <dt class="text-sm font-medium text-gray-600 truncate">Approved Requests</dt>
+                <dd class="mt-1 text-3xl font-semibold text-green-700">{{ approvedRequests }}</dd>
+                <p class="mt-1 text-sm text-gray-600">Successfully approved</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-5 sm:px-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Recent Expense Submissions</h2>
+        </div>
+        <ul role="list" class="divide-y divide-gray-200">
+          <li v-for="item in recentSubmissions" :key="item.id" class="px-6 py-4 sm:px-6">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-medium text-indigo-700">{{ item.type }}</p>
+              <div class="ml-2 flex-shrink-0">
+                <span
+                  class="px-2 py-1 text-xs font-medium rounded-full"
+                  :class="{
+                    'bg-yellow-100 text-yellow-800': item.status === 'Pending',
+                    'bg-green-100 text-green-800': item.status === 'Approved',
+                    'bg-red-100 text-red-800': item.status === 'Rejected'
+                  }"
+                >
+                  {{ item.status }}
+                </span>
+              </div>
+            </div>
+            <div class="mt-2 sm:flex sm:justify-between">
+              <div class="sm:flex">
+                <span class="mr-4 flex items-center text-sm text-gray-600">
+                  <span class="material-icons mr-1 text-gray-500 text-sm">calendar_today</span>
+                  {{ new Date(item.date).toLocaleDateString() }}
+                </span>
+              </div>
+              <div class="mt-2 sm:mt-0">
+                <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View Details</a>
+              </div>
+            </div>
+          </li>
+          <li v-if="recentSubmissions.length === 0" class="px-6 py-4 sm:px-6 text-gray-500 italic">No recent submissions.</li>
+        </ul>
+        <div class="bg-gray-50 px-6 py-3 sm:px-6 sm:flex sm:justify-end">
+          <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View All Submissions</a>
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-5 sm:px-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Pending Approval Requests</h2>
+        </div>
+        <ul role="list" class="divide-y divide-gray-200">
+          <li v-for="item in pendingRequests" :key="item.id" class="px-6 py-4 sm:px-6">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-medium text-amber-700">{{ item.type }}</p>
+              <div class="ml-2 flex-shrink-0">
+                <span class="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
+                  {{ item.status }}
+                </span>
+              </div>
+            </div>
+            <div class="mt-2 sm:flex sm:justify-between">
+              <div class="sm:flex">
+                <span class="mr-4 flex items-center text-sm text-gray-600">
+                  <span class="material-icons mr-1 text-gray-500 text-sm">calendar_today</span>
+                  {{ new Date(item.date).toLocaleDateString() }}
+                </span>
+              </div>
+              <div class="mt-2 sm:mt-0">
+                <a href="#" class="text-sm font-medium text-amber-600 hover:text-amber-500">Review</a>
+              </div>
+            </div>
+          </li>
+          <li v-if="pendingRequests.length === 0" class="px-6 py-4 sm:px-6 text-gray-500 italic">No pending requests.</li>
+        </ul>
+        <div class="bg-gray-50 px-6 py-3 sm:px-6 sm:flex sm:justify-end">
+          <a href="#" class="text-sm font-medium text-amber-600 hover:text-amber-500">View All Pending</a>
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-5 sm:px-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        </div>
+        <div class="px-6 py-5 sm:px-6 flex gap-3">
+          <button
+            @click="router.push('/expenses')"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <span class="material-icons mr-2 text-sm">add</span> Submit Expense
           </button>
           <button
             @click="router.push('/resources')"
-            class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium shadow transition hover:scale-105"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Request Resources
+          <span class="material-icons mr-2 text-sm">inventory</span> Request Resources
           </button>
         </div>
       </div>
+
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Add transition for the content shift when the sidebar opens/closes */
+/* You can remove this from Dashboard.vue as it's now in the layout */
+/* .transition-margin-left {
+  transition: margin-left 0.3s ease-in-out;
+} */
+</style>

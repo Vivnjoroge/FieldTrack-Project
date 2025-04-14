@@ -1,4 +1,5 @@
 <script setup>
+import Breadcrumb from "../layouts/Breadcrumb.vue";
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 
@@ -18,6 +19,11 @@ const editingExpense = ref(null); // For editing
 const editedAmount = ref("");
 const editedDescription = ref("");
 const editedExpenseType = ref("");
+
+const breadcrumbSegments = ref([
+    { label: 'Dashboard', path: '/dashboard' },
+    //{ label: 'Expenses' },
+]);
 
 // Get department from localStorage
 const getUserDepartment = () => {
@@ -217,6 +223,7 @@ onMounted(async () => {
 
 <template>
   <div class="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-2xl rounded-xl border border-gray-100">
+    <Breadcrumb :segments="breadcrumbSegments" class="mb-4" />
     <h2 class="text-4xl font-extrabold text-gray-800 text-center mb-8">Expense Management</h2>
 
     <div v-if="showForm" class="mb-10 p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
@@ -339,3 +346,4 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+  

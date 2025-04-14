@@ -1,4 +1,5 @@
 <script setup>
+import Breadcrumb from '../layouts/Breadcrumb.vue';
 import { ref, computed, onMounted } from 'vue';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
@@ -32,12 +33,18 @@ const reportDataFetched = ref(false);
 const loading = ref(false);
 const errorMessage = ref('');
 
+const breadcrumbSegments = ref([
+    { label: 'Dashboard', path: '/dashboard' },
+    //{ label: 'Reports' },
+]);
+
+
 const computedChartData = computed(() => {
     if (!reportData.value || reportData.value.length === 0) {
         return null;
     }
     return {
-        labels: reportData.value.map((item) => item.Expense_Type),
+        labels: reportData.value.map((item) => item.Expense_Type_Detail), // Use Expense_Type_Detail
         datasets: [
             {
                 label: 'Total Expenses (KSh)',
@@ -77,7 +84,7 @@ const chartOptions = {
         x: {
             title: {
                 display: true,
-                text: 'Expense Type',
+                text: 'Expense Description', // Updated label
                 font: {
                     weight: 'bold',
                 },
@@ -98,7 +105,7 @@ const chartOptions = {
         },
         title: {
             display: true,
-            text: 'Monthly Expense Summary',
+            text: 'Monthly Expense Summary by Description', // Updated title
             font: {
                 size: 18,
                 weight: 'bold',
@@ -185,6 +192,7 @@ onMounted(() => {
 
 <template>
     <div class="bg-white rounded-lg shadow-md p-6">
+        <Breadcrumb :segments="breadcrumbSegments" class="mb-4" />
         <h2 class="text-xl font-semibold mb-4 text-gray-800">Monthly Expense Summary</h2>
 
         <div class="mb-6 flex items-center space-x-4">

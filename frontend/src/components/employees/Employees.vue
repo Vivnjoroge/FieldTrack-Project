@@ -1,4 +1,5 @@
 <script setup>
+import Breadcrumb from "../layouts/Breadcrumb.vue";
 import { ref, onMounted } from "vue";
 
 const employees = ref([]);
@@ -6,6 +7,12 @@ const error = ref(null);
 const loading = ref(true);
 const editingEmployee = ref(null);
 const updatedEmployee = ref({});
+
+const breadcrumbSegments = ref([
+  { label: 'Dashboard', path: '/dashboard' }, 
+  //{ label: 'Employees' },
+]);
+
 
 onMounted(fetchEmployees);
 
@@ -87,6 +94,7 @@ async function deleteEmployee(employeeID) {
 
 <template>
   <div class="p-8 max-w-7xl mx-auto bg-white shadow-xl rounded-lg">
+    <Breadcrumb :segments="breadcrumbSegments" class="mb-4" />
     <h2 class="text-3xl font-bold text-blue-800 mb-6">Employee Management</h2>
 
     <!-- Loading & Error States -->

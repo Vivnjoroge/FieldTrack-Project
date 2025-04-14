@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require("../config/db");
 const verifyToken = require("../middleware/auth");
 
-// Monthly Expense Summary Report
+// Monthly Expense Summary Report (using Description for specificity)
 router.get("/monthly-summary", verifyToken, (req, res) => {
     try {
         const { month, year } = req.query;
@@ -16,14 +16,14 @@ router.get("/monthly-summary", verifyToken, (req, res) => {
 
         const query = `
             SELECT
-                Expense_Type,
+                Description AS Expense_Type_Detail,
                 SUM(Amount) AS Total_Amount
             FROM
                 Expense
             WHERE
                 MONTH(Date_Submitted) = ? AND YEAR(Date_Submitted) = ?
             GROUP BY
-                Expense_Type;
+                Description;
         `;
 
         console.log("Backend - Executing Query:", query, [month, year]); // For debugging

@@ -1,4 +1,5 @@
 <script setup>
+import Breadcrumb from "../layouts/Breadcrumb.vue";
 import { ref, onMounted } from "vue";
 import axios from "axios";
 
@@ -33,6 +34,10 @@ const editErrors = ref({
     resourceName: "",
     reason: ""
 });
+const breadcrumbSegments = ref([
+  { label: 'Dashboard', path: '/dashboard' }, 
+  //{ label: 'Resources' },
+]);
 
 // Fetch User Role
 const fetchUserRole = async () => {
@@ -229,6 +234,7 @@ onMounted(() => {
 
 <template>
     <div class="max-w-4xl mx-auto bg-white shadow-xl p-8 rounded-xl mt-10">
+        <Breadcrumb :segments="breadcrumbSegments" class="mb-4" />
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold text-gray-800">
                 {{ showRequestForm ? "Request a Resource" : "Your Resource Requests" }}
