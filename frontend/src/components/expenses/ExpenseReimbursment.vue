@@ -5,8 +5,8 @@ import axios from 'axios';
 
 
 const breadcrumbSegments = ref([
-    { label: 'Dashboard', path: '/dashboard' },
-    //{ label: 'Expense Reimbursment' },
+  { label: 'Dashboard', path: '/dashboard' },
+  //{ label: 'Expense Reimbursment' },
 ]);
 
 const form = ref({
@@ -28,12 +28,34 @@ const loadingClaims = ref(false);
 const errorClaims = ref(null);
 const selectedClaim = ref(null);
 const userRole = ref('');
+const validationErrors = ref({});
 
 const handleFileUpload = (event) => {
   form.value.receipt = event.target.files[0];
 };
 
+const validateForm = () => {
+  validationErrors.value = {};
+  let isValid = true;
+
+  if (form.value.description && !/^[a-zA-Z\s]+$/.test(form.value.description)) {
+    validationErrors.value.description = 'Description must contain only letters and spaces.';
+    isValid = false;
+  }
+
+  if (form.value.field_work_details.location && !/^[a-zA-Z\s]+$/.test(form.value.field_work_details.location)) {
+    validationErrors.value.location = 'Location must contain only letters and spaces.';
+    isValid = false;
+  }
+
+  return isValid;
+};
+
 const submitClaim = async () => {
+  if (!validateForm()) {
+    return;
+  }
+
   submissionStatus.value = '';
   submissionError.value = '';
   const formData = new FormData();
@@ -61,6 +83,7 @@ const submitClaim = async () => {
       receipt: null,
       field_work_details: { location: '', start_date: null, end_date: null },
     };
+    validationErrors.value = {}; // Clear validation errors on successful submission
     fetchRecentClaims();
   } catch (error) {
     submissionError.value = 'Failed to submit field work reimbursement claim.';
@@ -177,159 +200,158 @@ onMounted(() => {
 
 <template>
   <div class="bg-gray-100 min-h-screen py-12">
-    <div class="max-w-4xl mx-auto space-y-10">
-      <!-- Header Card -->
+    <div class="max-w-5xl mx-auto space-y-8">
       <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <Breadcrumb :segments="breadcrumbSegments" class="mb-4" />
+        <Breadcrumb :segments="breadcrumbSegments" class="mb-4 px-6 pt-4" />
         <div class="px-6 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white flex items-center gap-3">
           <span class="material-icons text-2xl">briefcase</span>
           <h2 class="text-xl font-semibold">Field Work Reimbursement</h2>
         </div>
 
-        <!-- Form Section -->
-        <div class="px-6 py-8">
-          <div v-if="userRole !== 'Finance'" class="mb-8">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Submit a New Claim</h3>
-            <form @submit.prevent="submitClaim" class="space-y-6">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label for="expenseType" class="block text-sm font-medium text-gray-700 mb-1">Expense Type</label>
-                  <select v-model="form.expenseType" id="expenseType"
-                          class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-                    <option value="" disabled>Select Type</option>
-                    <option value="Travel">Travel</option>
-                    <option value="Accommodation">Accommodation</option>
-                    <option value="Meals">Meals</option>
-                    <option value="Fuel">Fuel</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
+        <div v-if="userRole !== 'Finance'" class="px-6 py-8 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Submit a New Claim</h3>
+          <form @submit.prevent="submitClaim" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="expenseType" class="block text-sm font-medium text-gray-700 mb-1">Expense Type</label>
+                <select v-model="form.expenseType" id="expenseType"
+                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm">
+                  <option value="" disabled>Select Type</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Accommodation">Accommodation</option>
+                  <option value="Meals">Meals</option>
+                  <option value="Fuel">Fuel</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
 
-                <div>
-                  <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                  <div class="relative rounded-md shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">KES</div>
-                    <input v-model="form.amount" type="number" id="amount"
-                           class="w-full pl-10 pr-3 border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-                           placeholder="0.00" />
-                  </div>
-                </div>
-
-                <div class="sm:col-span-2">
-                  <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea v-model="form.description" id="description" rows="3"
-                            class="w-full border border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-                            placeholder="Details of the expenses."></textarea>
-                </div>
-
-                <div>
-                  <label for="receipt" class="block text-sm font-medium text-gray-700 mb-1">Receipt (Optional)</label>
-                  <input type="file" id="receipt" @change="handleFileUpload"
-                         class="block w-full text-sm text-gray-600 border border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-
-                <div>
-                  <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                  <input v-model="form.field_work_details.location" type="text" id="location"
-                         class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-                         placeholder="e.g., Project Site" />
-                </div>
-
-                <div>
-                  <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                  <input v-model="form.field_work_details.start_date" type="date" id="startDate"
-                         class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" />
-                </div>
-
-                <div>
-                  <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                  <input v-model="form.field_work_details.end_date" type="date" id="endDate"
-                         class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" />
+              <div>
+                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <div class="relative rounded-md shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-xs">KES</div>
+                  <input v-model="form.amount" type="number" id="amount"
+                         class="w-full pl-10 pr-3 border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm"
+                         placeholder="0.00" />
                 </div>
               </div>
 
-              <div class="flex items-center gap-4 mt-4">
-                <button type="submit"
-                        class="inline-flex items-center px-5 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium shadow hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500">
-                  <span class="material-icons text-base mr-2">send</span> Submit
-                </button>
-                <div v-if="submissionStatus" class="text-green-600 text-sm font-medium">{{ submissionStatus }}</div>
-                <div v-if="submissionError" class="text-red-600 text-sm font-medium">{{ submissionError }}</div>
+              <div class="sm:col-span-2">
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea v-model="form.description" id="description" rows="3"
+                          class="w-full border border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm"
+                          placeholder="Details of the expenses."></textarea>
+                <p v-if="validationErrors.description" class="text-red-500 text-xs mt-1">{{ validationErrors.description }}</p>
               </div>
-            </form>
-          </div>
 
-          <!-- Claims Section -->
-          <div>
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-              {{ userRole === 'Finance' ? 'Pending Claims' : 'Recent Claims' }}
-            </h3>
-            <div v-if="loadingClaims" class="text-gray-500 italic">Loading...</div>
-            <div v-else-if="errorClaims" class="text-red-500">{{ errorClaims }}</div>
+              <div>
+                <label for="receipt" class="block text-sm font-medium text-gray-700 mb-1">Receipt (Optional)</label>
+                <input type="file" id="receipt" @change="handleFileUpload"
+                       class="block w-full text-sm text-gray-600 border border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+              </div>
 
-            <ul v-else-if="recentClaims.length > 0" class="space-y-4">
-              <li v-for="claim in recentClaims" :key="claim.Expense_ID"
-                  class="bg-gray-50 border rounded-lg p-4 shadow-sm">
-                <div class="flex justify-between items-center">
-                  <p class="text-sm font-medium text-indigo-700">Claim #{{ claim.Expense_ID }}</p>
-                  <span
-                    class="px-2 py-1 text-xs font-semibold rounded-full"
-                    :class="{
-                      'bg-yellow-100 text-yellow-800': claim.Approval_Status === 'Pending',
-                      'bg-green-100 text-green-800': claim.Approval_Status === 'Approved',
-                      'bg-red-100 text-red-800': claim.Approval_Status === 'Rejected'
-                    }"
-                  >
-                    {{ claim.Approval_Status }}
-                  </span>
-                </div>
-                <div class="mt-2 text-sm text-gray-600 sm:flex sm:justify-between">
-                  <p>Submitted: {{ new Date(claim.Date_Submitted).toLocaleDateString() }}</p>
-                  <p>Amount: KES {{ claim.Amount }}</p>
-                  <div class="flex mt-2 sm:mt-0 gap-2">
-                    <button @click="showClaimDetails(claim)"
-                            class="text-indigo-600 text-sm hover:underline">Details</button>
-                    <template v-if="userRole === 'Finance' && claim.Approval_Status === 'Pending'">
-                      <button @click="approveClaim(claim.Expense_ID)"
-                              class="px-2 py-1 border border-green-500 text-green-600 hover:bg-green-100 text-xs rounded font-semibold">Approve</button>
-                      <button @click="rejectClaim(claim.Expense_ID)"
-                              class="px-2 py-1 border border-red-500 text-red-600 hover:bg-red-100 text-xs rounded font-semibold">Reject</button>
-                    </template>
-                  </div>
-                </div>
-              </li>
-            </ul>
+              <div>
+                <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input v-model="form.field_work_details.location" type="text" id="location"
+                       class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm"
+                       placeholder="e.g., Project Site" />
+                <p v-if="validationErrors.location" class="text-red-500 text-xs mt-1">{{ validationErrors.location }}</p>
+              </div>
 
-            <div v-else class="text-gray-500 italic">
-              {{ userRole === 'Finance' ? 'No pending claims.' : 'No recent claims submitted.' }}
+              <div>
+                <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input v-model="form.field_work_details.start_date" type="date" id="startDate"
+                       class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm" />
+              </div>
+
+              <div>
+                <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input v-model="form.field_work_details.end_date" type="date" id="endDate"
+                       class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm" />
+              </div>
             </div>
+
+            <div class="flex items-center gap-4 mt-4">
+              <button type="submit"
+                      class="inline-flex items-center px-5 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <span class="material-icons text-base mr-2">send</span> Submit
+              </button>
+              <div v-if="submissionStatus" class="text-green-600 text-sm font-medium">{{ submissionStatus }}</div>
+              <div v-if="submissionError" class="text-red-600 text-sm font-medium">{{ submissionError }}</div>
+            </div>
+          </form>
+        </div>
+
+        <div class="px-6 py-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            {{ userRole === 'Finance' ? 'Pending Claims' : 'Recent Claims' }}
+          </h3>
+          <div v-if="loadingClaims" class="text-gray-500 italic">Loading...</div>
+          <div v-else-if="errorClaims" class="text-red-500">{{ errorClaims }}</div>
+
+          <ul v-else-if="recentClaims.length > 0" class="space-y-3">
+            <li v-for="claim in recentClaims" :key="claim.Expense_ID"
+                class="bg-white border rounded-md p-4 shadow-sm">
+              <div class="flex justify-between items-center mb-2">
+                <p class="text-sm font-medium text-indigo-700">Claim #{{ claim.Expense_ID }}</p>
+                <span
+                  class="px-2 py-1 text-xs font-semibold rounded-full"
+                  :class="{
+                    'bg-yellow-100 text-yellow-800': claim.Approval_Status === 'Pending',
+                    'bg-green-100 text-green-800': claim.Approval_Status === 'Approved',
+                    'bg-red-100 text-red-800': claim.Approval_Status === 'Rejected'
+                  }"
+                >
+                  {{ claim.Approval_Status }}
+                </span>
+              </div>
+              <div class="text-sm text-gray-600 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <p>Submitted: {{ new Date(claim.Date_Submitted).toLocaleDateString() }}</p>
+                <p>Amount: KES {{ claim.Amount }}</p>
+                <p>Type: {{ claim.Expense_Type }}</p>
+                <p>Location: {{ JSON.parse(claim.Field_Work_Details)?.location || 'N/A' }}</p>
+              </div>
+              <div class="mt-2 flex items-center justify-between">
+                <button @click="showClaimDetails(claim)"
+                        class="text-indigo-600 text-sm hover:underline focus:outline-none">Details</button>
+                <div v-if="userRole === 'Finance' && claim.Approval_Status === 'Pending'" class="flex gap-2">
+                  <button @click="approveClaim(claim.Expense_ID)"
+                          class="px-3 py-1 border border-green-500 text-green-600 hover:bg-green-100 text-xs rounded font-semibold focus:outline-none">Approve</button>
+                  <button @click="rejectClaim(claim.Expense_ID)"
+                          class="px-3 py-1 border border-red-500 text-red-600 hover:bg-red-100 text-xs rounded font-semibold focus:outline-none">Reject</button>
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          <div v-else class="text-gray-500 italic">
+            {{ userRole === 'Finance' ? 'No pending claims.' : 'No recent claims submitted.' }}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal for Claim Details -->
     <div v-if="selectedClaim"
          class="fixed z-50 inset-0 overflow-y-auto bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
         <h3 class="text-xl font-semibold text-gray-900 mb-4">Claim Details</h3>
         <div class="space-y-2 text-sm text-gray-700">
           <p><strong>Claim ID:</strong> {{ selectedClaim.Expense_ID }}</p>
-          <p><strong>Expense Type:</strong> {{ selectedClaim.Expense_Type }}</p>
+          <p><strong>Expense Type:</strong> {{ selectedClaim.Expense_Type }}
+          </p>
           <p><strong>Amount:</strong> KES {{ selectedClaim.Amount }}</p>
           <p><strong>Submitted On:</strong> {{ new Date(selectedClaim.Date_Submitted).toLocaleDateString() }}</p>
           <p><strong>Status:</strong>
             <span :class="{
-                    'bg-yellow-100 text-yellow-800': selectedClaim.Approval_Status === 'Pending',
-                    'bg-green-100 text-green-800': selectedClaim.Approval_Status === 'Approved',
-                    'bg-red-100 text-red-800': selectedClaim.Approval_Status === 'Rejected'
-                  }"
+                'bg-yellow-100 text-yellow-800': selectedClaim.Approval_Status === 'Pending',
+                'bg-green-100 text-green-800': selectedClaim.Approval_Status === 'Approved',
+                'bg-red-100 text-red-800': selectedClaim.Approval_Status === 'Rejected'
+              }"
                   class="px-2 py-1 rounded-full text-xs font-medium">
               {{ selectedClaim.Approval_Status }}
             </span>
           </p>
           <p><strong>Description:</strong> {{ selectedClaim.Description }}</p>
-          <p><strong>Location:</strong> {{ selectedClaim.Field_Work_Details?.location }}</p>
+          <p><strong>Location:</strong> {{ selectedClaim.Field_Work_Details?.location || 'N/A' }}</p>
           <p><strong>Start Date:</strong> {{ selectedClaim.Field_Work_Details?.start_date ? new Date(selectedClaim.Field_Work_Details.start_date).toLocaleDateString() : 'N/A' }}</p>
           <p><strong>End Date:</strong> {{ selectedClaim.Field_Work_Details?.end_date ? new Date(selectedClaim.Field_Work_Details.end_date).toLocaleDateString() : 'N/A' }}</p>
 
@@ -342,7 +364,7 @@ onMounted(() => {
 
         <div class="mt-6 text-right">
           <button @click="selectedClaim = null"
-                  class="inline-flex justify-center px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 focus:ring-indigo-500">
+                  class="inline-flex justify-center px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-indigo-500">
             Close
           </button>
         </div>

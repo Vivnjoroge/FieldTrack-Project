@@ -26,7 +26,7 @@ const passwordError = ref("");
 
 // Validation Helpers
 const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidEmail = (email) => /^[a-zA-Z][^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isStrongPassword = (password) =>
     /(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}/.test(password);
 
