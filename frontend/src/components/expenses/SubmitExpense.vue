@@ -2,6 +2,11 @@
 import Breadcrumb from "../layouts/Breadcrumb.vue";
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { applyPlugin } from 'jspdf-autotable'; // Import applyPlugin
+
+applyPlugin(jsPDF); // Apply the plugin to jsPDF
 
 // Form state variables
 const amount = ref("");
@@ -22,6 +27,8 @@ const editedExpenseType = ref("");
 const editCounts = ref({}); // Track edit counts per expense ID
 const confirmDeleteId = ref(null);
 const isDeleting = ref(false);
+const editErrorMessage = ref("");
+const showEditError = ref(false);
 
 const breadcrumbSegments = ref([
     { label: 'Dashboard', path: '/dashboard' },
@@ -49,7 +56,14 @@ const fetchExpenses = async () => {
             headers: { Authorization: `Bearer ${token}` },
         });
 
-        expenses.value = response.data.map(expense => ({ ...expense, editCount: editCounts.value[expense.Expense_ID] || 0 }));
+        // Initialize edit counts if not present
+        response.data.forEach(expense => {
+            if (!editCounts.value[expense.Expense_ID]) {
+                editCounts.value[expense.Expense_ID] = expense.Edit_Count || 0;
+            }
+        });
+
+        expenses.value = response.data.map(expense => ({ ...expense, editCount: editCounts.value[expense.Expense_ID] }));
     } catch (error) {
         console.error("Error Fetching Expenses:", error);
     }
@@ -160,17 +174,21 @@ const openReceiptModal = (receipt) => {
 
 // Open the edit expense modal
 const openEditModal = (expense) => {
+    console.log('Edit Count for', expense.Expense_ID, ':', editCounts.value[expense.Expense_ID]);
     if ((editCounts.value[expense.Expense_ID] || 0) >= 3) {
-        message.value = `Expense ID ${expense.Expense_ID} has been edited the maximum of 3 times.`;
-        messageClass.value = "text-yellow-600 bg-yellow-100";
+        editErrorMessage.value = `Expense ID ${expense.Expense_ID} cannot be edited more than 3 times.`;
+        showEditError.value = true;
         return;
     }
+    editErrorMessage.value = "";
+    showEditError.value = false;
     modalType.value = 'editExpense';
     editingExpense.value = expense;
     editedAmount.value = expense.Amount;
     editedDescription.value = expense.Description;
     editedExpenseType.value = expense.Expense_Type;
     showModal.value = true;
+    console.log('showEditError:', showEditError.value);
 };
 
 // Close the modal
@@ -181,6 +199,8 @@ const closeModal = () => {
     editingExpense.value = null;
     message.value = "";
     messageClass.value = "";
+    showEditError.value = false;
+    editErrorMessage.value = "";
 };
 
 // Initiate delete confirmation
@@ -244,8 +264,8 @@ const saveEditedExpense = async () => {
             headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Update edit count
-        editCounts.value[editingExpense.value.Expense_ID] = (editCounts.value[editingExpense.value.Expense_ID] || 0) + 1;
+        // Increment edit count locally
+        editCounts.value[editingExpense.value.Expense_ID]++;
         fetchExpenses();
         closeModal();
     } catch (error) {
@@ -253,6 +273,51 @@ const saveEditedExpense = async () => {
         message.value = "Failed to update expense.";
         messageClass.value = "text-red-600 bg-red-100";
     }
+};
+
+// Function to generate and download PDF
+const printExpensesToPdf = () => {
+    const doc = new jsPDF();
+    const tableColumn = ["Employee ID", "Employee Name", "Amount", "Description", "Type", "Status"];
+    const tableRows = [];
+
+    expenses.value.forEach(expense => {
+        const rowData = [
+            expense.Employee_ID,
+            expense.Employee_Name,
+            `Ksh ${expense.Amount}`,
+            expense.Description,
+            expense.Expense_Type,
+            expense.Approval_Status,
+        ];
+        tableRows.push(rowData);
+    });
+
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 20,
+        styles: {
+            fontSize: 10,
+            cellPadding: 3,
+            halign: 'left',
+        },
+        headStyles: {
+            fillColor: [41, 128, 185], // Blue color
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+        },
+        columnStyles: {
+            0: { cellWidth: 25 }, // Employee ID
+            1: { cellWidth: 40 }, // Employee Name
+            2: { cellWidth: 25, halign: 'right' }, // Amount
+            3: { cellWidth: 50 }, // Description
+            4: { cellWidth: 30 }, // Type
+            5: { cellWidth: 25, halign: 'center' }, // Status
+        },
+    });
+
+    doc.save('expenses.pdf');
 };
 
 // Ensure department is set before running fetchExpenses
@@ -295,6 +360,12 @@ onMounted(async () => {
                     {{ loading ? 'Submitting...' : 'Submit' }}
                 </button>
             </form>
+        </div>
+
+        <div class="flex justify-end mb-4">
+            <button @click="printExpensesToPdf" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
+                Print to PDF
+            </button>
         </div>
 
         <div class="overflow-x-auto bg-white p-4 rounded-xl shadow-md border border-gray-100">
@@ -360,6 +431,9 @@ onMounted(async () => {
                             <div v-if="message && modalType=== 'editExpense'" :class="`p-3 rounded-md mb-4 ${messageClass}`">
                                 {{ message }}
                             </div>
+                            <div v-if="showEditError" class="p-3 rounded-md mb-4 bg-yellow-100 text-yellow-600">
+                                {{ editErrorMessage }}
+                            </div>
                             <div>
                                 <label for="editedAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                                 <input v-model="editedAmount" id="editedAmount" type="number" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500">
@@ -372,7 +446,7 @@ onMounted(async () => {
                                 <label for="editedExpenseType" class="block text-sm font-medium text-gray-700 mb-1">Expense Type</label>
                                 <input v-model="editedExpenseType" id="editedExpenseType" type="text" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-4 text-gray-800 focus:ring-blue-500 focus:border-blue-500">
                             </div>
-                            <button @click="saveEditedExpense" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md">Save</button>
+                            <button @click="saveEditedExpense" :disabled="(editingExpense?.editCount >= 3)" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md" :class="{'opacity-50 cursor-not-allowed': editingExpense?.editCount >= 3}">Save</button>
                         </div>
                     </div>
                     <div class="bg-gray-100 px-6 py-4 sm:flex sm:flex-row-reverse">

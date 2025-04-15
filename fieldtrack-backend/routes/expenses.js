@@ -10,9 +10,9 @@ const fs = require('fs').promises; // Using promises for cleaner async/await
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// ✅ 1. Employees Submit Expenses
+// 1. Employees Submit Expenses
 router.post("/", verifyToken, upload.single('receipt'), async (req, res) => {
-    console.log("➡️ POST /api/expenses - Submit Expense");
+    console.log(" POST /api/expenses - Submit Expense");
     try {
         const { expense_type, amount, description } = req.body;
         let receiptData = null;
@@ -46,47 +46,47 @@ router.post("/", verifyToken, upload.single('receipt'), async (req, res) => {
             `INSERT INTO Expense (Employee_ID, Expense_Type, Amount, Description, Receipt, Date_Submitted, Approval_Status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')`,
             [id, expense_type, amount, description, receiptData, date_submitted],
             (err, result) => {
-                console.log("  ➡️ Database Query:", this.sql);
-                console.log("  ➡️ Database Error:", err);
-                console.log("  ➡️ Database Result:", result);
+                console.log("  Database Query:", this.sql);
+                console.log("   Database Error:", err);
+                console.log("   Database Result:", result);
                 if (err) {
-                    console.error("  ❌ Database Insert Error:", err);
+                    console.error("   Database Insert Error:", err);
                     return res.status(500).json({ message: "Error creating expense", error: err.message });
                 }
-                console.log("  ✅ Inserted Data Successfully!", result);
+                console.log("  Inserted Data Successfully!", result);
                 res.json({ message: "Expense submitted successfully!", expenseId: result.insertId });
             }
         );
     } catch (error) {
-        console.error("  ❌ Unexpected Error:", error);
+        console.error("   Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
 
-// ✅ 8. Employees Submit Field Work Reimbursements
+// 8. Employees Submit Field Work Reimbursements
 router.post("/field-work-reimbursement", verifyToken, upload.single('receipt'), async (req, res) => {
-    console.log("➡️ POST /api/expenses/field-work-reimbursement - Submit Field Work Reimbursement");
-    console.log("  ➡️ Uploaded File (Field Work):", req.file);
+    console.log("POST /api/expenses/field-work-reimbursement - Submit Field Work Reimbursement");
+    console.log("  Uploaded File (Field Work):", req.file);
     try {
         const { expense_type, amount, description, field_work_details } = req.body;
         let receiptData = null;
 
-        console.log("  ➡️ Received Field Work Reimbursement Data:", req.body);
-        console.log("  ➡️ Uploaded File (Field Work):", req.file);
+        console.log("   Received Field Work Reimbursement Data:", req.body);
+        console.log("   Uploaded File (Field Work):", req.file);
 
         if (!expense_type || !amount || !description || !field_work_details) {
-            console.log("  ❌ Error: Missing required fields for field work reimbursement!");
+            console.log("   Error: Missing required fields for field work reimbursement!");
             return res.status(400).json({ message: "Missing required fields for field work reimbursement!" });
         }
 
         const { id, role } = req.user;
-        console.log("  ➡️ User ID:", id, "Role:", role);
+        console.log("  User ID:", id, "Role:", role);
         if (!id) {
-            console.log("  ❌ Error: User authentication failed!");
+            console.log("   Error: User authentication failed!");
             return res.status(401).json({ message: "User authentication failed!" });
         }
         if (role !== "Employee") {
-            console.log("  ❌ Error: Only employees can submit field work reimbursements!");
+            console.log("   Error: Only employees can submit field work reimbursements!");
             return res.status(403).json({ message: "Only employees can submit field work reimbursements!" });
         }
 
@@ -104,7 +104,7 @@ router.post("/field-work-reimbursement", verifyToken, upload.single('receipt'), 
                 console.log("  ➡️ Database Error (Field Work):", err);
                 console.log("  ➡️ Database Result (Field Work):", result);
                 if (err) {
-                    console.error("  ❌ Database Insert Error (Field Work):", err);
+                    console.error("   Database Insert Error (Field Work):", err);
                     return res.status(500).json({ message: "Error creating field work reimbursement", error: err.message });
                 }
                 console.log("  ✅ Field Work Reimbursement Inserted Successfully!", result);
@@ -112,26 +112,26 @@ router.post("/field-work-reimbursement", verifyToken, upload.single('receipt'), 
             }
         );
     } catch (error) {
-        console.error("  ❌ Unexpected Error (Field Work):", error);
+        console.error("   Unexpected Error (Field Work):", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
 
-// ✅ 2. Finance Approves Expenses
+//  2. Finance Approves Expenses
 router.put("/approve/:expenseId", verifyToken, (req, res) => {
-    console.log("➡️ PUT /api/expenses/approve/:expenseId - Approve Expense");
+    console.log("PUT /api/expenses/approve/:expenseId - Approve Expense");
     try {
         const { role } = req.user;
         const { expenseId } = req.params;
-        console.log("  ➡️ Expense ID:", expenseId, "User Role:", role);
+        console.log("   Expense ID:", expenseId, "User Role:", role);
 
         if (!expenseId) {
-            console.log("  ❌ Error: Expense ID is required!");
+            console.log("   Error: Expense ID is required!");
             return res.status(400).json({ message: "Expense ID is required!" });
         }
 
         if (role !== "Finance") {
-            console.log("  ❌ Error: Only Finance can approve expenses!");
+            console.log("   Error: Only Finance can approve expenses!");
             return res.status(403).json({ message: "Only Finance can approve expenses!" });
         }
 
@@ -143,11 +143,11 @@ router.put("/approve/:expenseId", verifyToken, (req, res) => {
                 console.log("  ➡️ Database Error:", err);
                 console.log("  ➡️ Database Result:", result);
                 if (err) {
-                    console.error("  ❌ Database Error:", err);
+                    console.error("   Database Error:", err);
                     return res.status(500).json({ message: "Error approving expense", error: err.message });
                 }
                 if (result.affectedRows === 0) {
-                    console.log("  ❌ Error: Expense not found or already processed!");
+                    console.log("   Error: Expense not found or already processed!");
                     return res.status(404).json({ message: "Expense not found or already processed!" });
                 }
 
@@ -155,7 +155,7 @@ router.put("/approve/:expenseId", verifyToken, (req, res) => {
             }
         );
     } catch (error) {
-        console.error("  ❌ Unexpected Error:", error);
+        console.error("   Unexpected Error:", error);
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });

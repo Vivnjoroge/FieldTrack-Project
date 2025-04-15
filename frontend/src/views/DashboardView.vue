@@ -4,7 +4,6 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout.vue";
 
 // Define role-based components dynamically
 const panels = {
-  Admin: defineAsyncComponent(() => import("@/components/dashboard/AdminPanel.vue")),
   Employee: defineAsyncComponent(() => import("@/components/dashboard/EmployeePanel.vue")),
   Finance: defineAsyncComponent(() => import("@/components/dashboard/FinancePanel.vue")),
   Manager: defineAsyncComponent(() => import("@/components/dashboard/ManagerPanel.vue")),

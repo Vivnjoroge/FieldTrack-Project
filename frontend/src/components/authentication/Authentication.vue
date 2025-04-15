@@ -205,11 +205,11 @@ const handleLogout = () => {
           <ul class="mt-8 space-y-3 opacity-60 animate-fade-in-down delay-500">
             <li class="flex items-center">
               <svg class="w-5 h-5 mr-3 text-teal-500 animate-wiggle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Smart Task Assignment
+              Easy Expense Management
             </li>
             <li class="flex items-center">
               <svg class="w-5 h-5 mr-3 text-purple-500 animate-wiggle delay-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.995 1.995 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path></svg>
-              Real-time Tracking
+              Easy Resource Management
             </li>
             <li class="flex items-center">
               <svg class="w-5 h-5 mr-3 text-indigo-500 animate-wiggle delay-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>

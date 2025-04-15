@@ -5,7 +5,7 @@ import EmployeeSidebar from '@/components/sidebars/EmployeeSidebar.vue';
 import ManagerSidebar from '@/components/sidebars/ManagerSidebar.vue';
 import FinanceSidebar from '@/components/sidebars/FinanceSidebar.vue';
 import Navigation from '@/components/layouts/Navigation.vue';
-import AdminSidebar from '../sidebars/AdminSidebar.vue';
+
 
 const userRole = ref(localStorage.getItem("role") || "Employee");
 
