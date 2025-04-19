@@ -18,6 +18,7 @@ const isRegister = ref(false); // Default to Sign In
 const isRegisterChanged = ref(false); // Track if the register state has just changed
 const showSaveCredentialsPrompt = ref(false);
 const formKey = ref(0);
+const rememberMe = ref(false); // Added ref for "Remember Me" checkbox
 
 // Validation
 const nameError = ref("");
@@ -90,7 +91,15 @@ const handleAuth = async () => {
 
             if (response.success && response.role) {
                 localStorage.setItem("role", response.role);
-                showSaveCredentialsPrompt.value = true;
+                if (rememberMe.value) {
+                    localStorage.setItem("email", email.value.trim());
+                    localStorage.setItem("password", password.value);
+                    localStorage.setItem("rememberMe", "true");
+                } else {
+                    localStorage.setItem("rememberMe", "false");
+                    localStorage.removeItem("email");
+                    localStorage.removeItem("password");
+                }
             }
         } else {
             response = await authStore.login({
@@ -101,6 +110,15 @@ const handleAuth = async () => {
             if (response.success) {
                 localStorage.setItem("role", response.role);
                 localStorage.setItem("department", response.department);
+                if (rememberMe.value) {
+                    localStorage.setItem("email", email.value.trim());
+                    localStorage.setItem("password", password.value);
+                    localStorage.setItem("rememberMe", "true");
+                } else {
+                    localStorage.setItem("rememberMe", "false");
+                    localStorage.removeItem("email");
+                    localStorage.removeItem("password");
+                }
             }
         }
 
@@ -131,6 +149,7 @@ onMounted(() => {
     if (!isRegister.value && shouldLoadSaved) {
         email.value = localStorage.getItem("email") || "";
         password.value = localStorage.getItem("password") || "";
+        rememberMe.value = true;
     }
 });
 
@@ -166,10 +185,12 @@ const handleSaveCredentials = (choice) => {
         localStorage.setItem("email", email.value);
         localStorage.setItem("password", password.value);
         localStorage.setItem("rememberMe", "true");
+        rememberMe.value = true;
     } else {
         localStorage.removeItem("email");
         localStorage.removeItem("password");
         localStorage.setItem("rememberMe", "false");
+        rememberMe.value = false;
     }
     showSaveCredentialsPrompt.value = false;
 };
@@ -180,121 +201,130 @@ const handleLogout = () => {
     department.value = "";
     email.value = "";
     password.value = "";
+    rememberMe.value = false;
     formKey.value++;
     router.push("/");
 };
 </script>
 
+
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4 md:p-8">
-    <div class="relative overflow-hidden rounded-xl shadow-md md:grid md:grid-cols-2 md:items-center md:gap-10 lg:gap-16 max-w-screen-xl w-full">
+    <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4 md:p-8">
+        <div class="relative overflow-hidden rounded-xl shadow-md md:grid md:grid-cols-2 md:items-center md:gap-10 lg:gap-16 max-w-screen-xl w-full">
 
-      <div class="relative z-10 p-8 md:p-12 lg:p-16 bg-white rounded-l-xl">
-        <div class="absolute inset-0 overflow-hidden rounded-l-xl">
-          <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-br from-teal-400 to-cyan-300 opacity-70 transform skew-y-[-10deg] origin-top-left"></div>
-          <div class="absolute bottom-0 right-0 w-full h-1/2 bg-gradient-to-bl from-purple-400 to-indigo-500 opacity-70 transform skew-y-[10deg] origin-bottom-right"></div>
-          <div class="absolute inset-0 bg-white opacity-30 animate-pulse-bg"></div>
+            <div class="relative z-10 p-8 md:p-12 lg:p-16 bg-white rounded-l-xl">
+                <div class="absolute inset-0 overflow-hidden rounded-l-xl">
+                    <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-br from-teal-400 to-cyan-300 opacity-70 transform skew-y-[-10deg] origin-top-left"></div>
+                    <div class="absolute bottom-0 right-0 w-full h-1/2 bg-gradient-to-bl from-purple-400 to-indigo-500 opacity-70 transform skew-y-[10deg] origin-bottom-right"></div>
+                    <div class="absolute inset-0 bg-white opacity-30 animate-pulse-bg"></div>
+                </div>
+                <div class="relative text-gray-800 text-center md:text-left">
+                    <h2 class="text-2xl font-semibold mb-6 tracking-tight animate-fade-in-down delay-200">
+                        Field Management System
+                    </h2>
+                    <p class="text-lg opacity-70 leading-relaxed animate-fade-in-down delay-400">
+                        Connecting your field teams with powerful tools for seamless operations.
+                    </p>
+                    <ul class="mt-8 space-y-3 opacity-60 animate-fade-in-down delay-500">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 mr-3 text-teal-500 animate-wiggle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Easy Expense Management
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 mr-3 text-purple-500 animate-wiggle delay-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.995 1.995 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path></svg>
+                            Easy Resource Management
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 mr-3 text-indigo-500 animate-wiggle delay-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Automated Processes
+                        </li>
+                    </ul>
+                    <p class="mt-10 text-sm opacity-50 animate-fade-in-down delay-600">
+                        Experience a new way to manage your field operations.
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 md:p-12 lg:p-16 rounded-r-xl shadow-md relative overflow-hidden">
+                <div class="text-center md:text-left">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-tight">
+                        {{ isRegister ? 'Create Account' : 'Sign In' }}
+                    </h2>
+                    <p class="text-sm text-gray-700 mb-6">
+                        {{ isRegister ? 'Get started by creating your account.' : 'Enter your details to access your account.' }}
+                    </p>
+                </div>
+
+                <p v-if="message" class="text-green-600 text-sm mb-4 text-center">{{ message }}</p>
+                <p v-if="error" class="text-red-500 text-sm mb-4 text-center">{{ error }}</p>
+
+                <form :key="formKey" @submit.prevent="handleAuth" autocomplete="off" class="space-y-4">
+                    <div v-if="isRegister">
+                        <label for="name" class="block text-gray-700 text-sm font-medium mb-2">Full Name</label>
+                        <input v-model="name" type="text" id="name" placeholder="Your Full Name" class="form-input" required />
+                        <span v-if="name && nameError" class="text-xs text-red-500">{{ nameError }}</span>
+                    </div>
+
+                    <div v-if="isRegister">
+                        <label for="department" class="block text-gray-700 text-sm font-medium mb-2">Department</label>
+                        <select v-model="department" id="department" class="form-select" required>
+                            <option disabled value="">Select Department</option>
+                            <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Work Email</label>
+                        <input v-model="email" type="text" id="email" name="email-x123" placeholder="your@company.com" class="form-input" required />
+                        <span v-if="email && emailError" class="text-xs text-red-500">{{ emailError }}</span>
+                    </div>
+
+                    <div class="relative">
+                        <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                        <input
+                            v-model="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            id="password"
+                            name="pass-y456"
+                            placeholder="Your Secure Password"
+                            class="form-input"
+                            required
+                        />
+                        <button
+                            type="button"
+                            @click="showPassword = !showPassword"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500 focus:outline-none"
+                        >
+                            {{ showPassword ? 'Hide' : 'Show' }}
+                        </button>
+                        <span v-if="password && passwordError" class="text-xs text-red-500">{{ passwordError }}</span>
+                    </div>
+
+                    <!-- <div class="flex items-center mb-4">
+                        <input v-model="rememberMe" type="checkbox" id="rememberMe" class="form-checkbox mr-2">
+                        <label for="rememberMe" class="text-gray-700 text-sm">Remember Me</label>
+                    </div> -->
+
+                    <button :disabled="loading" class="form-button w-full">
+                        {{ isRegister ? "Create Account" : "Sign In" }}
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-700">
+                        {{ isRegister ? "Already have an account?" : "Don't have an account?" }}
+                        <button @click="toggleRegister" type="button" class="text-indigo-600 font-semibold hover:underline focus:outline-none">
+                            {{ isRegister ? "Sign In" : "Create Account" }}
+                        </button>
+                    </p>
+                </div>
+            </div>
+
         </div>
-        <div class="relative text-gray-800 text-center md:text-left">
-          <h2 class="text-2xl font-semibold mb-6 tracking-tight animate-fade-in-down delay-200">
-            Field Management System
-          </h2>
-          <p class="text-lg opacity-70 leading-relaxed animate-fade-in-down delay-400">
-            Connecting your field teams with powerful tools for seamless operations.
-          </p>
-          <ul class="mt-8 space-y-3 opacity-60 animate-fade-in-down delay-500">
-            <li class="flex items-center">
-              <svg class="w-5 h-5 mr-3 text-teal-500 animate-wiggle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Easy Expense Management
-            </li>
-            <li class="flex items-center">
-              <svg class="w-5 h-5 mr-3 text-purple-500 animate-wiggle delay-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.995 1.995 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path></svg>
-              Easy Resource Management
-            </li>
-            <li class="flex items-center">
-              <svg class="w-5 h-5 mr-3 text-indigo-500 animate-wiggle delay-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-              Data-Driven Insights
-            </li>
-          </ul>
-          <p class="mt-10 text-sm opacity-50 animate-fade-in-down delay-600">
-            Experience a new way to manage your field operations.
-          </p>
-        </div>
-      </div>
-
-      <div class="bg-white p-8 md:p-12 lg:p-16 rounded-r-xl shadow-md relative overflow-hidden">
-        <div class="text-center md:text-left">
-          <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-tight">
-            {{ isRegister ? 'Create Account' : 'Sign In' }}
-          </h2>
-          <p class="text-sm text-gray-700 mb-6">
-            {{ isRegister ? 'Get started by creating your account.' : 'Enter your details to access your account.' }}
-          </p>
-        </div>
-
-        <p v-if="message" class="text-green-600 text-sm mb-4 text-center">{{ message }}</p>
-        <p v-if="error" class="text-red-500 text-sm mb-4 text-center">{{ error }}</p>
-
-        <form :key="formKey" @submit.prevent="handleAuth" autocomplete="off" class="space-y-4">
-          <div v-if="isRegister">
-            <label for="name" class="block text-gray-700 text-sm font-medium mb-2">Full Name</label>
-            <input v-model="name" type="text" id="name" placeholder="Your Full Name" class="form-input" required />
-            <span v-if="name && nameError" class="text-xs text-red-500">{{ nameError }}</span>
-          </div>
-
-          <div v-if="isRegister">
-            <label for="department" class="block text-gray-700 text-sm font-medium mb-2">Department</label>
-            <select v-model="department" id="department" class="form-select" required>
-              <option disabled value="">Select Department</option>
-              <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Work Email</label>
-            <input v-model="email" type="text" id="email" name="email-x123" placeholder="your@company.com" class="form-input" required />
-            <span v-if="email && emailError" class="text-xs text-red-500">{{ emailError }}</span>
-          </div>
-
-          <div class="relative">
-            <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
-            <input
-              v-model="password"
-              :type="showPassword ? 'text' : 'password'"
-              id="password"
-              name="pass-y456"
-              placeholder="Your Secure Password"
-              class="form-input"
-              required
-            />
-            <button
-              type="button"
-              @click="showPassword = !showPassword"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500 focus:outline-none"
-            >
-              {{ showPassword ? 'Hide' : 'Show' }}
-            </button>
-            <span v-if="password && passwordError" class="text-xs text-red-500">{{ passwordError }}</span>
-          </div>
-
-          <button :disabled="loading" class="form-button w-full">
-            {{ isRegister ? "Create Account" : "Sign In" }}
-          </button>
-        </form>
-
-        <div class="mt-6 text-center">
-          <p class="text-sm text-gray-700">
-            {{ isRegister ? "Already have an account?" : "Don't have an account?" }}
-            <button @click="toggleRegister" type="button" class="text-indigo-600 font-semibold hover:underline focus:outline-none">
-              {{ isRegister ? "Sign In" : "Create Account" }}
-            </button>
-          </p>
-        </div>
-      </div>
-
     </div>
-  </div>
 </template>
+
+
 
 <style scoped>
 /* Existing animations for the left side */

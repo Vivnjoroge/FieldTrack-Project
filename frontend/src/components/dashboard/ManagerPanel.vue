@@ -60,7 +60,7 @@ onMounted(() => {
                             <span class="text-sm sm:text-base">Expenses Summary</span>
                         </button>
                         <button
-                            @click="$router.push('/resources')"
+                            @click="$router.push('/reports')"
                             class="bg-green-500 hover:bg-green-600 text-white font-medium py-3 rounded-md transition duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                         >
                             <span class="text-sm sm:text-base">Manage Resources</span>

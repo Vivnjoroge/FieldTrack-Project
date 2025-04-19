@@ -2,7 +2,7 @@
 import Breadcrumb from '../layouts/Breadcrumb.vue';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
-
+import { format } from 'date-fns'; // Import date-fns for date manipulation
 
 const breadcrumbSegments = ref([
   { label: 'Dashboard', path: '/dashboard' },
@@ -37,6 +37,8 @@ const handleFileUpload = (event) => {
 const validateForm = () => {
   validationErrors.value = {};
   let isValid = true;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize today's date
 
   if (form.value.description && !/^[a-zA-Z\s]+$/.test(form.value.description)) {
     validationErrors.value.description = 'Description must contain only letters and spaces.';
@@ -45,6 +47,32 @@ const validateForm = () => {
 
   if (form.value.field_work_details.location && !/^[a-zA-Z\s]+$/.test(form.value.field_work_details.location)) {
     validationErrors.value.location = 'Location must contain only letters and spaces.';
+    isValid = false;
+  }
+
+  if (form.value.field_work_details.start_date) {
+    const startDate = new Date(form.value.field_work_details.start_date);
+    if (startDate < today) {
+      validationErrors.value.startDate = 'Start date cannot be in the past.';
+      isValid = false;
+    }
+  } else {
+    validationErrors.value.startDate = 'Start date is required.';
+    isValid = false;
+  }
+
+  if (form.value.field_work_details.end_date) {
+    const endDate = new Date(form.value.field_work_details.end_date);
+    if (endDate < today) {
+      validationErrors.value.endDate = 'End date cannot be in the past.';
+      isValid = false;
+    }
+    if (form.value.field_work_details.start_date && endDate < new Date(form.value.field_work_details.start_date)) {
+      validationErrors.value.endDate = 'End date cannot be before the start date.';
+      isValid = false;
+    }
+  } else {
+    validationErrors.value.endDate = 'End date is required.';
     isValid = false;
   }
 
@@ -261,12 +289,14 @@ onMounted(() => {
                 <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                 <input v-model="form.field_work_details.start_date" type="date" id="startDate"
                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm" />
+                <p v-if="validationErrors.startDate" class="text-red-500 text-xs mt-1">{{ validationErrors.startDate }}</p>
               </div>
 
               <div>
                 <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
                 <input v-model="form.field_work_details.end_date" type="date" id="endDate"
                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm" />
+                <p v-if="validationErrors.endDate" class="text-red-500 text-xs mt-1">{{ validationErrors.endDate }}</p>
               </div>
             </div>
 
@@ -312,63 +342,63 @@ onMounted(() => {
               </div>
               <div class="mt-2 flex items-center justify-between">
                 <button @click="showClaimDetails(claim)"
-                        class="text-indigo-600 text-sm hover:underline focus:outline-none">Details</button>
-                <div v-if="userRole === 'Finance' && claim.Approval_Status === 'Pending'" class="flex gap-2">
-                  <button @click="approveClaim(claim.Expense_ID)"
-                          class="px-3 py-1 border border-green-500 text-green-600 hover:bg-green-100 text-xs rounded font-semibold focus:outline-none">Approve</button>
-                  <button @click="rejectClaim(claim.Expense_ID)"
-                          class="px-3 py-1 border border-red-500 text-red-600 hover:bg-red-100 text-xs rounded font-semibold focus:outline-none">Reject</button>
+                        class="text-indigo-600 text-sm hover:underline focus:outline -none">Details</button>
+                        <div v-if="userRole === 'Finance' && claim.Approval_Status === 'Pending'" class="flex gap-2">
+                          <button @click="approveClaim(claim.Expense_ID)"
+                                  class="px-3 py-1 border border-green-500 text-green-600 hover:bg-green-100 text-xs rounded font-semibold focus:outline-none">Approve</button>
+                          <button @click="rejectClaim(claim.Expense_ID)"
+                                  class="px-3 py-1 border border-red-500 text-red-600 hover:bg-red-100 text-xs rounded font-semibold focus:outline-none">Reject</button>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+
+                  <div v-else class="text-gray-500 italic">
+                    {{ userRole === 'Finance' ? 'No pending claims.' : 'No recent claims submitted.' }}
+                  </div>
                 </div>
               </div>
-            </li>
-          </ul>
+            </div>
 
-          <div v-else class="text-gray-500 italic">
-            {{ userRole === 'Finance' ? 'No pending claims.' : 'No recent claims submitted.' }}
+            <div v-if="selectedClaim"
+                 class="fixed z-50 inset-0 overflow-y-auto bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center">
+              <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Claim Details</h3>
+                <div class="space-y-2 text-sm text-gray-700">
+                  <p><strong>Claim ID:</strong> {{ selectedClaim.Expense_ID }}</p>
+                  <p><strong>Expense Type:</strong> {{ selectedClaim.Expense_Type }}
+                  </p>
+                  <p><strong>Amount:</strong> KES {{ selectedClaim.Amount }}</p>
+                  <p><strong>Submitted On:</strong> {{ new Date(selectedClaim.Date_Submitted).toLocaleDateString() }}</p>
+                  <p><strong>Status:</strong>
+                    <span :class="{
+                      'bg-yellow-100 text-yellow-800': selectedClaim.Approval_Status === 'Pending',
+                      'bg-green-100 text-green-800': selectedClaim.Approval_Status === 'Approved',
+                      'bg-red-100 text-red-800': selectedClaim.Approval_Status === 'Rejected'
+                    }"
+                          class="px-2 py-1 rounded-full text-xs font-medium">
+                      {{ selectedClaim.Approval_Status }}
+                    </span>
+                  </p>
+                  <p><strong>Description:</strong> {{ selectedClaim.Description }}</p>
+                  <p><strong>Location:</strong> {{ selectedClaim.Field_Work_Details?.location || 'N/A' }}</p>
+                  <p><strong>Start Date:</strong> {{ selectedClaim.Field_Work_Details?.start_date ? new Date(selectedClaim.Field_Work_Details.start_date).toLocaleDateString() : 'N/A' }}</p>
+                  <p><strong>End Date:</strong> {{ selectedClaim.Field_Work_Details?.end_date ? new Date(selectedClaim.Field_Work_Details.end_date).toLocaleDateString() : 'N/A' }}</p>
+
+                  <div v-if="selectedClaim.Receipt" class="pt-2">
+                    <strong>Receipt:</strong>
+                    <a :href="selectedClaim.Receipt" target="_blank" class="text-indigo-600 hover:underline block mt-1">View Attachment</a>
+                  </div>
+                  <p v-else class="italic text-gray-500">No receipt attached.</p>
+                </div>
+
+                <div class="mt-6 text-right">
+                  <button @click="selectedClaim = null"
+                          class="inline-flex justify-center px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-indigo-500">
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="selectedClaim"
-         class="fixed z-50 inset-0 overflow-y-auto bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center">
-      <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4">Claim Details</h3>
-        <div class="space-y-2 text-sm text-gray-700">
-          <p><strong>Claim ID:</strong> {{ selectedClaim.Expense_ID }}</p>
-          <p><strong>Expense Type:</strong> {{ selectedClaim.Expense_Type }}
-          </p>
-          <p><strong>Amount:</strong> KES {{ selectedClaim.Amount }}</p>
-          <p><strong>Submitted On:</strong> {{ new Date(selectedClaim.Date_Submitted).toLocaleDateString() }}</p>
-          <p><strong>Status:</strong>
-            <span :class="{
-                'bg-yellow-100 text-yellow-800': selectedClaim.Approval_Status === 'Pending',
-                'bg-green-100 text-green-800': selectedClaim.Approval_Status === 'Approved',
-                'bg-red-100 text-red-800': selectedClaim.Approval_Status === 'Rejected'
-              }"
-                  class="px-2 py-1 rounded-full text-xs font-medium">
-              {{ selectedClaim.Approval_Status }}
-            </span>
-          </p>
-          <p><strong>Description:</strong> {{ selectedClaim.Description }}</p>
-          <p><strong>Location:</strong> {{ selectedClaim.Field_Work_Details?.location || 'N/A' }}</p>
-          <p><strong>Start Date:</strong> {{ selectedClaim.Field_Work_Details?.start_date ? new Date(selectedClaim.Field_Work_Details.start_date).toLocaleDateString() : 'N/A' }}</p>
-          <p><strong>End Date:</strong> {{ selectedClaim.Field_Work_Details?.end_date ? new Date(selectedClaim.Field_Work_Details.end_date).toLocaleDateString() : 'N/A' }}</p>
-
-          <div v-if="selectedClaim.Receipt" class="pt-2">
-            <strong>Receipt:</strong>
-            <a :href="selectedClaim.Receipt" target="_blank" class="text-indigo-600 hover:underline block mt-1">View Attachment</a>
-          </div>
-          <p v-else class="italic text-gray-500">No receipt attached.</p>
-        </div>
-
-        <div class="mt-6 text-right">
-          <button @click="selectedClaim = null"
-                  class="inline-flex justify-center px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-indigo-500">
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
+        </template>
