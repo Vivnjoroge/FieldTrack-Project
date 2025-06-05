@@ -19,11 +19,26 @@ const reports = require("./routes/reports");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration: allow only your frontend domain
+// Define allowed origins array
+const allowedOrigins = [
+    "http://localhost:5173",                 // local frontend
+    "https://final-project-two-sooty.vercel.app",  // deployed frontend
+    "https://field-track.onrender.com",      // your backend domain, if frontend uses this origin
+];
+
+// CORS middleware config
 app.use(cors({
-  origin: "https://final-project-two-sooty.vercel.app",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true, // enable if you use cookies or auth headers requiring credentials
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,  // if you use cookies/auth headers
 }));
 
 app.use(bodyParser.json());
@@ -81,7 +96,7 @@ app.post("/api/expenses/upload-receipt", upload.single("receipt"), (req, res) =>
 app.get("/api/expenses/receipt/:id", (req, res) => {
     const { id } = req.params;
     const sql = "SELECT Receipt FROM Expense WHERE id = ?";
-    
+
     db.query(sql, [id], (err, result) => {
         if (err) return res.status(500).json({ success: false, message: err.message });
         if (result.length === 0) return res.status(404).json({ success: false, message: "Receipt not found" });
@@ -101,7 +116,7 @@ app.use(express.static(frontendPath));
 
 // Handle SPA routing (send index.html for unknown routes)
 app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
+    res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // Start Server

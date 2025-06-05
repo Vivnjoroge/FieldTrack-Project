@@ -32,7 +32,10 @@ export const useAuthStore = defineStore("auth", {
         async login(credentials) {
             try {
                 console.log("Token before login:", localStorage.getItem("token")); // Log token before login
+                console.log("Login URL:", `${apiUrl}/api/auth/login`);
+
                 const response = await fetch(`${apiUrl}/api/auth/login`, {
+    
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(credentials),
