@@ -8,7 +8,7 @@ const db = mysql.createConnection({
     database: "FieldResourceManagement"
 });
 
-// Connect to Database
+// Connect to Database 
 db.connect(err => {
     if (err) {
         console.error("Database connection failed:", err);
