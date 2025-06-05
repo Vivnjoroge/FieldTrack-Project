@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import Breadcrumb from '../layouts/Breadcrumb.vue';
 import { ref, computed, onMounted } from 'vue';
 import { Bar } from 'vue-chartjs';
@@ -157,7 +158,7 @@ const fetchExpenseReport = async () => {
 
     try {
         const response = await axios.get(
-            `/api/reports/monthly-summary?month=${selectedMonth.value}&year=${selectedYear.value}`,
+            `${apiUrl}/api/reports/monthly-summary?month=${selectedMonth.value}&year=${selectedYear.value}`,
             {
                 headers: { Authorization: `Bearer ${token}` },
             }

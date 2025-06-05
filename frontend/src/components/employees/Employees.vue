@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import Breadcrumb from "../layouts/Breadcrumb.vue";
 import { ref, onMounted } from "vue";
 
@@ -21,7 +22,7 @@ async function fetchEmployees() {
   loading.value = true;
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:5000/api/employees", {
+    const response = await fetch(`${apiUrl}/api/employees`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -47,7 +48,7 @@ function startEditing(employee) {
 async function saveEdit() {
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:5000/api/employees/${editingEmployee.value}`, {
+    const response = await fetch(`${apiUrl}/api/employees/${editingEmployee.value}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -75,7 +76,7 @@ async function deleteEmployee(employeeID) {
 
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:5000/api/employees/${employeeID}`, {
+    const response = await fetch(`${apiUrl}/api/employees/${employeeID}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });

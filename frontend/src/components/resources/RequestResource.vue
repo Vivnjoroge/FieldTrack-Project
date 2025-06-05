@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import Breadcrumb from "../layouts/Breadcrumb.vue";
 import { ref, onMounted } from "vue";
 import axios from "axios";
@@ -45,7 +46,7 @@ const fetchUserRole = async () => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await axios.get("http://localhost:5000/api/profile/me", {
+        const response = await axios.get(`${apiUrl}/api/profile/me`, {
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -68,7 +69,7 @@ const fetchResources = async () => {
             return;
         }
 
-        const response = await axios.get("http://localhost:5000/api/resources", {
+        const response = await axios.get(`${apiUrl}/api/resources`, {
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -136,7 +137,7 @@ const submitRequest = async () => {
 const approveRequest = async (requestId) => {
     try {
         const token = localStorage.getItem("token");
-        await axios.put(`http://localhost:5000/api/resources/approve/${requestId}`, {}, {
+        await axios.put(`${apiUrl}/api/resources/approve/${requestId}`, {}, {
             headers: { Authorization: `Bearer ${token}` },
         });
         fetchResources();
@@ -151,7 +152,7 @@ const approveRequest = async (requestId) => {
 const rejectRequest = async (requestId) => {
     try {
         const token = localStorage.getItem("token");
-        await axios.put(`http://localhost:5000/api/resources/reject/${requestId}`, {}, {
+        await axios.put(`${apiUrl}/api/resources/reject/${requestId}`, {}, {
             headers: { Authorization: `Bearer ${token}` },
         });
         fetchResources();
@@ -189,7 +190,7 @@ const updateRequest = async () => {
 
     try {
         const token = localStorage.getItem("token");
-        await axios.put(`http://localhost:5000/api/resources/${editResourceId.value}`, {
+        await axios.put(`${apiUrl}/api/resources/${editResourceId.value}`, {
             resource_name: editResourceName.value,
             quantity: editQuantity.value,
             reason: editReason.value,
@@ -212,7 +213,7 @@ const updateRequest = async () => {
 const deleteRequest = async (resourceId) => {
     try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/resources/${resourceId}`, {
+        await axios.delete(`${apiUrl}/api/resources/${resourceId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         message.value = "Request deleted successfully.";

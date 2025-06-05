@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import Breadcrumb from '../layouts/Breadcrumb.vue';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
@@ -97,7 +98,7 @@ const submitClaim = async () => {
 
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.post('/api/expenses/field-work-reimbursement', formData, {
+    const response = await axios.post(`${apiUrl}/api/expenses/field-work-reimbursement`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`,
@@ -144,7 +145,7 @@ const fetchRecentClaims = async () => {
     recentClaims.value = await Promise.all(recentClaims.value.map(async (claim) => {
       if (claim.Receipt) {
         try {
-          const receiptResponse = await axios.get(`/api/expenses/${claim.Expense_ID}/receipt`, {
+          const receiptResponse = await axios.get(`${apiUrl}/api/expenses/${claim.Expense_ID}/receipt`, {
             headers: { Authorization: `Bearer ${token}` },
             responseType: 'blob',
           });
@@ -173,7 +174,7 @@ const showClaimDetails = (claim) => {
   }
   if (selectedClaim.value.Receipt) {
     const token = localStorage.getItem('token');
-    axios.get(`/api/expenses/${selectedClaim.value.Expense_ID}/receipt`, {
+    axios.get(`${apiUrl}/api/expenses/${selectedClaim.value.Expense_ID}/receipt`, {
       headers: { Authorization: `Bearer ${token}` },
       responseType: 'blob',
     })
@@ -190,7 +191,7 @@ const showClaimDetails = (claim) => {
 const approveClaim = async (expenseId) => {
   try {
     const token = localStorage.getItem('token');
-    await axios.put(`/api/expenses/approve/${expenseId}`, {}, {
+    await axios.put(`${apiUrl}/api/expenses/approve/${expenseId}`, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -205,7 +206,7 @@ const approveClaim = async (expenseId) => {
 const rejectClaim = async (expenseId) => {
   try {
     const token = localStorage.getItem('token');
-    await axios.put(`/api/expenses/reject/${expenseId}`, {}, {
+    await axios.put(`${apiUrl}/api/expenses/reject/${expenseId}`, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

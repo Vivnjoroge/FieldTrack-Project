@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import Breadcrumb from "../layouts/Breadcrumb.vue";
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
@@ -52,7 +53,7 @@ const fetchExpenses = async () => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await axios.get("http://localhost:5000/api/expenses", {
+        const response = await axios.get(`${apiUrl}/api/expenses`, {
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -107,7 +108,7 @@ const handleSubmit = async () => {
     };
 
     try {
-        await axios.post("http://localhost:5000/api/expenses", expenseData, {
+        await axios.post(`${apiUrl}/api/expenses`, expenseData, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -141,7 +142,7 @@ const approveExpense = async (expenseId) => {
     if (!token) return;
 
     try {
-        await axios.put(`http://localhost:5000/api/expenses/approve/${expenseId}`, null, {
+        await axios.put(`${apiUrl}/api/expenses/approve/${expenseId}`, null, {
             headers: { Authorization: `Bearer ${token}` },
         });
         fetchExpenses();
@@ -156,7 +157,7 @@ const rejectExpense = async (expenseId) => {
     if (!token) return;
 
     try {
-        await axios.put(`http://localhost:5000/api/expenses/reject/${expenseId}`, null, {
+        await axios.put(`${apiUrl}/api/expenses/reject/${expenseId}`, null, {
             headers: { Authorization: `Bearer ${token}` },
         });
         fetchExpenses();
@@ -223,7 +224,7 @@ const deleteExpense = async (expenseId) => {
     if (!token) return;
 
     try {
-        await axios.delete(`http://localhost:5000/api/expenses/${expenseId}`, {
+        await axios.delete(`${apiUrl}/api/expenses/${expenseId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         fetchExpenses();
@@ -256,7 +257,7 @@ const saveEditedExpense = async () => {
     if (!token) return;
 
     try {
-        await axios.put(`http://localhost:5000/api/expenses/${editingExpense.value.Expense_ID}`, {
+        await axios.put(`${apiUrl}/api/expenses/${editingExpense.value.Expense_ID}`, {
             amount: editedAmount.value,
             description: editedDescription.value.trim(),
             expense_type: editedExpenseType.value.trim(),

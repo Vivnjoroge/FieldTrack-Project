@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
   import { ref, onMounted } from 'vue';
   import axios from 'axios';
   import { useRouter } from 'vue-router';
@@ -17,7 +18,7 @@
     error.value = null;
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/profile/me', {
+      const response = await axios.get(`${apiUrl}/api/profile/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       profileData.value = response.data;

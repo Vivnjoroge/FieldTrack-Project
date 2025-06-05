@@ -19,7 +19,13 @@ const reports = require("./routes/reports");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// CORS configuration: allow only your frontend domain
+app.use(cors({
+  origin: "https://final-project-two-sooty.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true, // enable if you use cookies or auth headers requiring credentials
+}));
+
 app.use(bodyParser.json());
 
 // Default Route
@@ -88,6 +94,15 @@ app.get("/api/expenses/receipt/:id", (req, res) => {
 const expressListEndpoints = require("express-list-endpoints");
 console.log(expressListEndpoints(app));
 
+const frontendPath = path.join(__dirname, "dist");
+
+// Serve static files from the Vue.js app
+app.use(express.static(frontendPath));
+
+// Handle SPA routing (send index.html for unknown routes)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+
 // Start Server
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-

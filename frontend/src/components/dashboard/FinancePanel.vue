@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { Pie } from "vue-chartjs";
@@ -57,7 +58,7 @@ const chartOptions = {
 const fetchUserProfile = async () => {
     try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/profile/me", {
+        const response = await axios.get(`${apiUrl}/api/profile/me`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         userProfile.value = response.data;
@@ -73,7 +74,7 @@ const fetchFinanceData = async () => {
 
     try {
         const token = localStorage.getItem("token");
-        const { data: allExpenses } = await axios.get("http://localhost:5000/api/expenses", {
+        const { data: allExpenses } = await axios.get(`${apiUrl}/api/expenses`, {
             headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -99,7 +100,8 @@ onMounted(() => {
 // Approve
 const approveExpense = async (id) => {
     try {
-        await axios.put(`http://localhost:5000/api/expenses/approve/${id}`, {}, {
+        
+      await axios.put(`${apiUrl}/api/expenses/approve/${id}`, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
         fetchFinanceData();
@@ -111,7 +113,7 @@ const approveExpense = async (id) => {
 // Reject
 const rejectExpense = async (id) => {
     try {
-        await axios.put(`http://localhost:5000/api/expenses/reject/${id}`, {}, {
+        await axios.put(`${apiUrl}/api/expenses/reject/${id}`, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
         fetchFinanceData();

@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import ExpenseBarChart from './ExpenseBarChart.vue'; // ✅ Custom bar chart component
@@ -24,7 +25,7 @@ const fetchSummaryData = async () => {
         const currentYear = new Date().getFullYear();
 
         const response = await axios.get(
-            `/api/reports/monthly-summary?month=${currentMonth}&year=${currentYear}`,
+            `${apiUrl}/api/reports/monthly-summary?month=${currentMonth}&year=${currentYear}`,
             {
                 headers: { Authorization: `Bearer ${token}` },
             }

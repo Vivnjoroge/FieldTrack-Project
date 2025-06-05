@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
@@ -8,7 +9,7 @@ const expenseList = ref([]);
 const loadExpenses = async () => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:5000/api/expenses', {
+    const response = await axios.get(`${apiUrl}/api/expenses`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     expenseList.value = response.data;
@@ -20,7 +21,7 @@ const loadExpenses = async () => {
 // Mark an expense as approved
 const handleApprove = async (expenseId) => {
   try {
-    await axios.put(`http://localhost:5000/api/expenses/${expenseId}/approve`, {}, {
+    await axios.put(`${apiUrl}/api/expenses/${expenseId}/approve`, {}, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     await loadExpenses(); // Refresh the list
@@ -32,7 +33,7 @@ const handleApprove = async (expenseId) => {
 // Mark an expense as rejected
 const handleReject = async (expenseId) => {
   try {
-    await axios.put(`http://localhost:5000/api/expenses/${expenseId}/reject`, {}, {
+    await axios.put(`${apiUrl}/api/expenses/${expenseId}/reject`, {}, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     await loadExpenses(); // Refresh the list

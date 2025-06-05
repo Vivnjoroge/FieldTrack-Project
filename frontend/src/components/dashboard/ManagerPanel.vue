@@ -1,4 +1,5 @@
 <script setup>
+const apiUrl = import.meta.env.VITE_API_URL;
 import { ref, onMounted } from "vue";
 import axios from "axios"; // ✅ Make sure axios is imported
 import ExpenseSummary from "../expenses/ExpenseSummary.vue";
@@ -12,7 +13,7 @@ const userProfile = ref(null); // ✅ Declare userProfile as a reactive ref
 const fetchUserProfile = async () => {
     try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/profile/me", {
+        const response = await axios.get(`${apiUrl}/api/profile/me`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         userProfile.value = response.data;
