@@ -11,7 +11,7 @@ const db = mysql.createConnection({
     port: parseInt(process.env.DB_PORT),
     ssl: {
         // Read the CA cert file
-        ca: fs.readFileSync(path.resolve(__dirname, "/fieldtrack-backend/certs/ca.pem")),
+        ca: fs.readFileSync(path.resolve(__dirname, "../certs/ca.pem")),
         rejectUnauthorized: true
     }
 });
