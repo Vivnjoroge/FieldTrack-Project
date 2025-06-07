@@ -1,7 +1,7 @@
-// config/db.js
 require("dotenv").config();
-
 const mysql = require("mysql2");
+const fs = require("fs");
+const path = require("path");
 
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -10,6 +10,8 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME,
     port: parseInt(process.env.DB_PORT),
     ssl: {
+        // Read the CA cert file
+        ca: fs.readFileSync(path.resolve(__dirname, "/fieldtrack-backend/certs/ca.pem")),
         rejectUnauthorized: true
     }
 });
