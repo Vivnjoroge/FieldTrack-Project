@@ -4,11 +4,19 @@ const fs = require("fs");
 const path = require("path");
 
 // Detect if running on Render (you can also set a custom env var if you want)
-const isRender = process.env.RENDER || false;
+const isRender = !!process.env.RENDER;
 
 const caPath = isRender
-  ? "/run/secrets/ca.pem"   // Render mounts secret files here
+  ? "/etc/secrets/ca.pem"   // Correct path for Render secret files on free plan
   : path.resolve(__dirname, "../certs/ca.pem"); // Local dev path
+
+let sslCa;
+try {
+  sslCa = fs.readFileSync(caPath);
+} catch (err) {
+  console.error(`Failed to read CA cert at ${caPath}:`, err.message);
+  process.exit(1); // Exit because SSL connection requires CA cert
+}
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -17,12 +25,12 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME,
   port: parseInt(process.env.DB_PORT),
   ssl: {
-    ca: fs.readFileSync(caPath),
-    rejectUnauthorized: true
-  }
+    ca: sslCa,
+    rejectUnauthorized: true,
+  },
 });
 
-db.connect(err => {
+db.connect((err) => {
   if (err) {
     console.error("Database connection failed:", err);
     console.error("Host:", process.env.DB_HOST);
