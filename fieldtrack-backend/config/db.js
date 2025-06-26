@@ -1,46 +1,54 @@
-require("dotenv").config();
+
+require("dotenv").config();              // ❶ always load env first
+const fs    = require("fs");
+const path  = require("path");
 const mysql = require("mysql2");
-const fs = require("fs");
-const path = require("path");
 
-// Detect if running on Render (you can also set a custom env var if you want)
-const isRender = !!process.env.RENDER;
+const isRender = process.env.RENDER === "true";
+const isAiven = isRender || process.env.NODE_ENV === "production";
 
-const caPath = isRender
-  ? "/etc/secrets/ca.pem"   // Correct path for Render secret files on free plan
-  : path.resolve(__dirname, "../certs/ca.pem"); // Local dev path
+let sslConfig = null;
 
-let sslCa;
-try {
-  sslCa = fs.readFileSync(caPath);
-} catch (err) {
-  console.error(`Failed to read CA cert at ${caPath}:`, err.message);
-  process.exit(1); // Exit because SSL connection requires CA cert
+if (isRender) {
+  // Only try to read CA cert if on Render
+  const caPath = "/etc/secrets/ca.pem";
+  try {
+    const sslCa = fs.readFileSync(caPath);
+    sslConfig = {
+      ca: sslCa,
+      rejectUnauthorized: true,
+    };
+  } catch (err) {
+    console.error(`❌ Failed to read CA cert at ${caPath}:`, err.message);
+    process.exit(1);
+  }
 }
 
-const db = mysql.createConnection({
+const databaseName = process.env.DB_NAME || (isAiven ? "defaultdb" : "FieldResourceManagement");
+
+console.log("isAiven:", isAiven);
+console.log("Using database:", databaseName);
+
+const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: parseInt(process.env.DB_PORT),
-  ssl: {
-    ca: sslCa,
-    rejectUnauthorized: true,
-  },
-});
+  database: databaseName,
+  port: parseInt(process.env.DB_PORT, 10),
+};
+
+if (sslConfig) {
+  dbConfig.ssl = sslConfig;
+}
+
+const db = mysql.createConnection(dbConfig);
 
 db.connect((err) => {
   if (err) {
-    console.error("Database connection failed:", err);
-    console.error("Host:", process.env.DB_HOST);
-    console.error("Port:", process.env.DB_PORT);
-    console.error("User:", process.env.DB_USER);
-    console.error("Database:", process.env.DB_NAME);
+    console.error("❌ Database connection failed:", err);
   } else {
-    console.log("Connected to Aiven MySQL Database!");
+    console.log("✅ Connected to Aiven MySQL Database!");
   }
 });
 
 module.exports = db;
-

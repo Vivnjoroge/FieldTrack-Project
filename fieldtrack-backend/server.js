@@ -1,4 +1,5 @@
 require("dotenv").config();
+console.log("🔑 SECRET_KEY from env:", process.env.SECRET_KEY);
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -20,8 +21,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Define allowed origins array
+const isDev = process.env.NODE_ENV !== "production";
 const allowedOrigins = [
     "http://localhost:5173",                 // local frontend
+    ...(isDev ? ["http://localhost:5000"] : []),
     "https://final-project-two-sooty.vercel.app",  // deployed frontend
     "https://field-track.onrender.com",      // your backend domain, if frontend uses this origin
 ];
